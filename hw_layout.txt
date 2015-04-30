@@ -1,0 +1,30 @@
+//Evan Thompson Jack Cusick, Tausif Ahmed
+
+The homework is based around the notion of servers and memory management. --> build a server to store, read, and delete files according to a paging system
+
+2 systems (not counting client code)
+
+	Server:
+		- Handle incoming requests and manage interpret what the client wants.  
+		- All UI implementation is in the server code
+		- Server interprets errors from paging system
+		- Should not care about how paging system is implemented (Black box)
+		- Thread based
+
+	Paging System:
+		- Seperate class
+		- Singleton
+		- Create API to handle incoming read, stores, deletes
+		- Writes as little as possible to screen
+		- never segfault or crash
+		- test thoroughly through client code	
+	
+
+Paging System API:
+
+	??? functions needed ???
+
+	How do we want to implement
+
+
+
