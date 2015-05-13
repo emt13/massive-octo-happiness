@@ -47,6 +47,8 @@ class PagingSystem{
 
 		void store_file_data(std::string file_path, std::string file_name, int page_num, int frame_num);
 		
+		void setup_storage();
+
 		int page_already_loaded(std::string file_name, int page_num);
 		
 		void remove_frame_num_from_page(int frame_num);
@@ -71,7 +73,6 @@ class PagingSystem{
 
 		std::vector<std::string> dir();
 
-		void setup_storage();
 
 		void print_stats();
 

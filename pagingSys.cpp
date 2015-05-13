@@ -17,7 +17,7 @@ PagingSystem::PagingSystem(int n_frames, int f_size, int max_file_frames){
 	num_frames = n_frames;
 	size_frames = f_size;
 	frames_per_file = max_file_frames;
-
+	setup_storage();
 	init_frames();
 }
 
@@ -83,8 +83,9 @@ int PagingSystem::store(std::string file_name, std::vector<BYTE> data){
 
 	//file doesn't exist
 	if(rc != 0){
-		int fd = open(file_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, DIR_PERMISSIONS);
+		int fd = open(file_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_EXCL, DIR_PERMISSIONS);
 		std::cout<<"got fd - "<<fd<<std::endl;
+		if(fd == -1){ std::cout<<"!!! ERRNO: "<<errno<<std::endl; }
 		int total = 0;
 		for(unsigned int i = 0; i < data.size(); i++){
 			BYTE arr[1] = {data[i]};
