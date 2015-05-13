@@ -36,6 +36,8 @@ class Frame{
 	 
 		std::string owner(){ return file_name; }
 
+		void purge();
+		
 		int get_page_num(){ return page_num; }
 };
 

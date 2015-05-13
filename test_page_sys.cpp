@@ -7,6 +7,14 @@ typedef unsigned char BYTE;
 
 PagingSystem* ps;
 
+void print_data(std::vector<BYTE>& data){
+	printf("\n");
+	for(unsigned int i = 0; i < data.size(); i++){
+		printf("%c", (char) data[i]);
+	}
+	printf("\n");
+}
+
 void test_dir(){
 	printf("--- testing dir: \n");
 	std::vector<std::string> files = ps->dir();
@@ -39,7 +47,7 @@ void test_store(){
 
 	ps->store(std::string("to_be_delete.txt"), data1);
 
-	printf("--- finished store test\n\n");
+	printf("\n--- finished store test\n\n");
 }
 
 void test_delete(){
@@ -52,7 +60,24 @@ void test_delete(){
 }
 
 void test_read(){
+	printf("--- testing read\n");
+
+	//int off = 4888;
+	//int num = (5*1024-1) - off;
+
 	
+	int off = 0;
+	int num = 1023;
+
+	printf("  # reading in at %d, %d\n", off, num);
+	
+	std::string file_path(".storage/sample.txt");
+	std::string file_name("sample.txt");
+	std::vector<BYTE> data = ps->read_page(file_name, off, num);
+	
+	print_data(data);
+
+	printf("--- finished testing read\n\n");
 }
 
 int main(){
@@ -68,4 +93,6 @@ int main(){
 	test_delete();
 
 	test_dir();
+	
+	test_read();
 }

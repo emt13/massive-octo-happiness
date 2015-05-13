@@ -45,7 +45,7 @@ class PagingSystem{
 
 		int get_LRU(std::string file_name);
 
-		void store_file_data(std::string file_path, std::string file_name, int page_num, int frame_num);
+		void store_file_data(std::string file_path, std::string file_name, int page_num, int frame_num, int amount);
 		
 		void setup_storage();
 
