@@ -244,7 +244,7 @@ std::vector<BYTE> PagingSystem::read_page(std::string file_name, int offset, int
 	file_path.append(SLASH_STR);
 	file_path.append(file_name);
 
-	/*if(!file_exists(file_path)){
+	if(!file_exists(file_path)){
 		*flag = DNE; // DNE
 		return std::vector<BYTE>();
 	}
@@ -252,7 +252,7 @@ std::vector<BYTE> PagingSystem::read_page(std::string file_name, int offset, int
 	if(get_file_size(file_path) < offset + amount){
 		*flag = INV_BYTE_RANGE;
 		return std::vector<BYTE>();
-	}*/
+	}
 
 	//if it is not in the page table, add it
 	if(page_table.count(file_name) == 0){
