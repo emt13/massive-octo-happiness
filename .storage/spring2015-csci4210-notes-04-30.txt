@@ -1,0 +1,259 @@
+[04/30/2015]
+
+NO VIDEO-RECORDING TODAY
+
+Final Exam
+-- Contact me (goldschmidt@gmail.com) immediately if you
+   have final exam conflicts or require additional time
+
+Homework #4
+===========
+Support for binary and text files....
+-- file type does not matter; just a stream of bytes
+-- use lstat() to obtain file size
+-- you can use open(); but then to use fseek(), you
+   need FILE*
+   -- to translate from fd to FILE*, try fdopen()
+   -- or use lseek()
+
+(using the given defaults in the specs...)
+given that memory is filled up, so all 32 frames are full
+-- if a READ request comes in for a file not in memory at all,
+   then replace/reuse the frames of the oldest file
+   -- i.e. perform LRU on the files (not the frames)
+
+
+
+If a given file is so small, it requires 3 frames or less,
+ you could:
+ (a) still allocate 4 frames....not very efficient
+ (b) allocate frames only on demand
+ -- use (b)
+
+
+
+Synchronization....of STORE, READ, DELETE, DIR
+(also ensure no starvation, e.g., of DELETE commands)
+-- e.g. while a thread (or process) is storing a file for
+    a STORE command, another thread/process attempts a READ
+     (or a DELETE)
+
+-- e.g. while a thread/process is performing a READ,
+    a client attempts a DELETE
+
+-- if a client requests a DELETE, don't delete until all
+    current READ operations are done
+     -- future READ operations should result in an error
+         (file does not exist)
+     -- avoid starvation for the DELETE command
+
+===========================================================
+
+SEGMENTATION
+-- a SEGMENT is a "slice" of memory
+   -- it exists in a non-contiguous memory space
+   -- it can be of variable size
+      -- the OS allocates memory for the segment
+      -- only the given process (or processes)
+         can access the allocated memory
+	 -- or else.....segmentation fault
+
+-- a SEGMENT is also a "slice" of a program
+   -- segments correspond to logical divisions of a program:
+      -- code segment
+      -- data segment
+         -- contains initialized static variables
+	    -- global variables, static local variables
+      -- BSS (Block Started by Symbol) segment
+         -- contains statically allocated variables
+	     with no size at compile time
+	 -- only size of total required space is stored
+	 -- initialized at runtime
+      -- runtime stack
+      -- heap for dynamically allocated memory
+      -- library module segment
+         -- allow for the given segment to be shared
+
+-- Segmentation lookup
+   -- map from logical to physical memory address
+   -- a memory address in a segment must have two components:
+      -- segment start (which segment are we in)
+      -- offset (within that given segment)
+   -- add offset to segment start address to obtain
+       the actual physical address
+
+PAGING
+-- a PAGE is a "slice" of memory
+   -- it exists in non-contiguous memory space
+   -- P[n] <-- look at page n for process P
+      -- it's not guaranteed (or even expected)
+          that P[n] is adjacent to P[n-1] or P[n+1]
+   -- each page is of the same size
+   -- page size is somewhat arbitrary
+      -- tune page size to optimize performance
+      -- what happens if page size is....
+         ... too big?
+	 ... too small?
+
+COMBINE SEGMENTATION and PAGING
+-- Segments are of variable sizes
+-- Pages are fixed sizes
+
+=============================================
+
+int A[100][100]
+
+array A: [0-99] of array [0-99] of integers
+
+for i = 0 .. 99
+  for j = 0 .. 99
+    A[i][j] = 0
+
+for i = 0 .. 99
+  for j = 0 .. 99
+    A[j][i] = 0
+
+
+=============================================
+
+VIRTUAL MEMORY
+-- A means for exposing memory to processes
+-- Mapping memory addresses seen by a process (virtual addresses)
+    into physical addresses
+-- OS can use this mapping concept to provide a virtual address
+    space that's larger than the actual physical memory
+      available
+
+-- Virtual memory enables the execution of large processes and
+    manipulation/use of large datasets
+-- Virtual memory permits idle programs to be moved out of memory
+    to accommodate other processes
+-- Virtual memory also enables sharing of memory
+
+-- With virtual memory, only part of a process needs to be loaded
+    into memory for it to start its execution
+-- Unused pages (all pages) are on disk
+
+Virtual Memory Policies:
+-- the FETCH policy governs when a page should be loaded into
+    memory (e.g., demand paging, demand paging that loads some
+     surrounding pages into physical memory)
+-- the PLACEMENT policy specifies where a page is loaded into
+    physical memory (use page table)
+-- the REPLACEMENT policy determines which existing page
+    (already in physical memory) should be replaced
+     (i.e., identifies the victim page)
+
+Page allocation:
+-- in a STATIC ALLOCATION scheme, the number of frames per process
+    is fixed/static
+-- in a DYNAMIC ALLOCATION scheme, the number of frames per process
+    can vary....
+
+-- in an EQUAL ALLOCATION scheme, all processes have an equal
+    number of frames
+-- in a PROPORTIONAL ALLOCATION scheme, processes are allocated
+    frames in proportion to size, priority, etc.
+
+Associate a valid/invalid bit with each page table entry
+-- initially, all entries are set to i (invalid)
+-- during address translation, if valid/invalid bit is v (valid),
+    then the page is already in physical memory
+-- otherwise (invalid), a PAGE FAULT occurs
+
+
+
+
+
+
+-- goal is to reduce/minimize the number of page faults
+    that occur
+
+-- Page Replacement Policy
+   -- algorithm for selecting the victim page to be
+       replaced in physical memory
+
+   page reference stream:
+    1 2 3 2 1 1 3 4 4 2 4 5 7 2 2 8 3 2 2 1 1
+
+   given a 3-frame memory (allocated for this process)
+
+     1 2 3 2 1 1 3 4 4 2 4 5 7 2 2 8 3 2 2
+----------------------------------------------------
+     1 1 1 1 1 1 1 4 4 4 4 4 4 2 2 2 2 2 2
+       2 2 2 2 2 2 2 2 2 2 5 5 5 5 8 8 8 8
+         3 3 3 3 3 3 3 3 3 3 7 7 7 7 3 3 3
+----------------------------------------------------
+page * * *         *       * * *   * *      <=== 9 page faults
+fault
+
+FIFO (as shown above)
+LRU (least-recently used)
+LFU (least-frequently used)
+OPT (optimal based on future page references....)
+Working Set
+
+
+
+
+LRU (least-recently used)
+
+     1 2 3 2 1 1 3 4 4 2 4 5 7 2 2 8 3 2 2
+----------------------------------------------------
+     1 1 1 1 1 1 1 1 1 2 2 2 7 7 7 7 3 3 3
+       2 2 2 2 2 2 4 4 4 4 4 4 2 2 2 2 2 2
+         3 3 3 3 3 3 3 3 3 5 5 5 5 8 8 8 8
+----------------------------------------------------
+page * * *         *   *   * * *   * * <==== 10 page faults
+fault
+
+
+OPT
+
+     1 2 3 2 1 1 3 4 4 2 4 5 7 2 2 8 3 2 2
+----------------------------------------------------
+     1 1 1 1 1 1 1 4 4 4 4 5 7 7 7 8 8 8 8
+       2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+         3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+----------------------------------------------------
+page * * *         *       * *     *  <==== 7 page faults
+fault
+
+
+
+
+
+
+Working Set:
+
+  page reference stream:
+     1 2 3 2 1 1 3 4 4 2 4 5 7 2 2 8 3 2 2
+
+  working set delta is 2 (look backwards in time 2 memory accesses)
+
+     1 2 3 2 1 1 3 4 4 2 4 5 7 2 2 8 3 2 2
+         ^   ^
+         |<->|
+           working set is { 1, 2, 3 }
+
+
+  working set delta is 5
+     1 2 3 2 1 1 3 4 4 2 4 5 7 2 2 8 3 2 2
+         ^         ^
+         |<------->|
+           working set is { 1, 2, 3, 4 }
+
+
+  working set delta is 5
+     1 2 3 2 1 1 3 4 4 2 4 5 7 2 2 8 3 2 2
+                 ^         ^
+                 |<------->|
+           working set is { 2, 3, 4, 5 }
+
+  working set delta is 5
+     1 2 3 2 1 1 3 4 4 2 4 5 7 2 2 8 3 2 2
+                               ^         ^
+                               |<------->|
+                          working set is { 2, 3, 8 }
+
+

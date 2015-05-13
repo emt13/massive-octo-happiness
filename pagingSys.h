@@ -13,6 +13,9 @@
 #include <ctime>
 #include <dirent.h>
 #include <stdio.h>
+#include <sys/types.h>
+#include <sys/uio.h>
+#include "frame.h"
 
 #define STORAGE_STR ".storage"
 #define DIR_PERMISSIONS 0777
@@ -32,13 +35,27 @@ class PagingSystem{
 		int frames_per_file;
 
 		//FrameSystem frames;
-
+		std::vector<Frame> frames;
+		
+		std::map<std::string, std::vector<int> > page_table;
 
 		//Functions
 		long get_file_size(std::string file_path);
 		bool file_exists(std::string file_path);
 
-		void init_pages();
+		int get_LRU(std::string file_name);
+
+		void store_file_data(std::string file_path, std::string file_name, int page_num, int frame_num, int amount);
+		
+		void setup_storage();
+
+		int page_already_loaded(std::string file_name, int page_num);
+		
+		void remove_frame_num_from_page(int frame_num);
+
+		void add_frame_num_to_page(std::string file_name, int frame_num);
+
+		void init_frames();
 	public:
 	 	PagingSystem(int n_frames, int s_frames, int max_file_frames);
 
@@ -46,7 +63,9 @@ class PagingSystem{
 		int get_size_frames(){ return size_frames; }
 		int get_max_frames_per_file(){ return frames_per_file; }
 
-		bool load_file(std::string file_name);
+		//bool load_file(std::string file_name);
+
+		std::vector<BYTE> read_page(std::string file_name, int offset, int amount);
 
 		int store(std::string file_name, std::vector<BYTE> data);
 
@@ -54,7 +73,6 @@ class PagingSystem{
 
 		std::vector<std::string> dir();
 
-		void setup_storage();
 
 		void print_stats();
 
