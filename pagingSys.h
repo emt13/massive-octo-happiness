@@ -22,6 +22,9 @@
 #define SLASH_STR "/"
 #define CURR_DIR_STR "."
 #define PREV_DIR_STR ".."
+#define INV_BYTE_RANGE 2
+#define DNE 1
+#define SUCCESS_READ 0
 
 typedef unsigned char BYTE;
 

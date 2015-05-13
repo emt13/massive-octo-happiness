@@ -72,31 +72,31 @@ void test_read(){
 	int num = 1024;
 
 	//printf("  # reading in at %d, %d\n", off, num);
-	int* flag = 0;
+	int* flag = new int;
+	*flag = 0;
 	std::vector<BYTE> data = ps->read_page(file_name, off, num, flag);
 	
 	//print_data(data);
 //--
 	off = 1024;
-	num = 2048;
+	num = 1024;
 
-	//printf("  # reading in at %d, %d\n", off, num);
-
+//	printf("  # reading in at %d, %d\n", off, num);
 	data = ps->read_page(file_name, off, num, flag);
 	
 	//print_data(data);
 //--
 	off = 2048;
-	num = 3072;
+	num = 1024;
 
-	//printf("  # reading in at %d, %d\n", off, num);
+//	printf("  # reading in at %d, %d\n", off, num);
 
 	data = ps->read_page(file_name, off, num, flag);
 	
 	//print_data(data);
 //--
 	off = 3072;
-	num = 4096;
+	num = 1024;
 
 	//printf("  # reading in at %d, %d\n", off, num);
 
@@ -105,7 +105,7 @@ void test_read(){
 	//print_data(data);
 //--
 	off = 4096;
-	num = 5120;
+	num = 1024;
 
 	//printf("  # reading in at %d, %d\n", off, num);
 
@@ -113,6 +113,12 @@ void test_read(){
 	
 	//print_data(data);
 
+	off = 5120;
+	num = 512;
+
+	data = ps->read_page(file_name, off, num, flag);
+	
+	print_data(data);
 
 	printf("--- finished testing read\n\n");
 }

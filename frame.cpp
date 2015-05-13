@@ -22,12 +22,16 @@ std::vector<BYTE> Frame::get_data(int off, int amount){
 	std::vector<BYTE> ret_data;
 
 	if(off < 0 || off >= size){ return ret_data; }
+	//printf("*^*^*^*^*^**^*^*^*^( %d )*^**^*^*^*^*^*^*^*^*^*^*\n", amount);
 
 	for(unsigned int i = off; i < data.size(); i++){
 		ret_data.push_back(data[i]);
+		printf("%c", (char) data[i]);
 		amount--;
 		if(amount == 0){ break; }
 	}
+	//printf("*^*^*^*^*^**^*^*^*^*^**^*^*^*^*^*^*^*^*^*^*\n");
+
 
 	//printf("ret_data size: %lu\n", ret_data.size());
 	return ret_data;
