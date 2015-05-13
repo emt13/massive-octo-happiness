@@ -65,7 +65,7 @@ class PagingSystem{
 
 		//bool load_file(std::string file_name);
 
-		std::vector<BYTE> read_page(std::string file_name, int offset, int amount);
+		std::vector<BYTE> read_page(std::string file_name, int offset, int amount, int* flag);
 
 		int store(std::string file_name, std::vector<BYTE> data);
 

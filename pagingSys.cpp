@@ -236,13 +236,18 @@ int PagingSystem::page_already_loaded(std::string file_name, int page_num){
 }	
 
 
-std::vector<BYTE> PagingSystem::read_page(std::string file_name, int offset, int amount){
+std::vector<BYTE> PagingSystem::read_page(std::string file_name, int offset, int amount, int* flag){
 
 	//printf(" ( -- reading -- ) \n");
 
 	std::string file_path(STORAGE_STR);
 	file_path.append(SLASH_STR);
 	file_path.append(file_name);
+
+	if(!file_exists(file_path)){
+		*flag = 1; // DNE
+		return std::vector<BYTE>();
+	}
 
 	//if it is not in the page table, add it
 	if(page_table.count(file_name) == 0){
@@ -265,6 +270,7 @@ std::vector<BYTE> PagingSystem::read_page(std::string file_name, int offset, int
 	int rc = page_already_loaded(file_name, page_num);
 	if(rc != -1){
 	//	printf("page already loaded in frame: %d\n", rc);
+		*flag = 0;
 		return frames[rc].get_data(offset, amount);
 	}
 
@@ -290,7 +296,7 @@ std::vector<BYTE> PagingSystem::read_page(std::string file_name, int offset, int
 	printf("Allocated page %d to frame %d\n", page_num+1, frame_to_replace);
 
 	//display server output	
-
+	*flag = 0;
 	//pull the information from the frame, return it
 	return frames[frame_to_replace].get_data(offset, amount);
 
