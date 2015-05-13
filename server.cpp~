@@ -352,7 +352,7 @@ void * client_thread(void * arg){
 	    }
 	  }
 	  else{
-	    sendClient(*(clientInfo->newsock),"ack\n", 4);
+	    sendClient(*(clientInfo->newsock),"ACK\n", 4);
 	  }
 	}
       }
@@ -406,38 +406,104 @@ void * client_thread(void * arg){
 	  //if file queued for deletion, spew ERROR: FILE QUEUED FOR DELETION\n to client
 
 	  
+	  bool send = 1;
 
 	  //use a counter here if you need to do +1 or something (maybe no counter maybe just if(currRead==0) dont add 1, else +1 -------- for startVal
 	  while(currRead != numRead){
 	    std::vector<BYTE> tmpVec;
 	    
 	    startVal = offset+currRead;
-	    stopVal = (startVal+SIZE_FRAMES) % SIZE_FRAMES;
+	    if((startVal%SIZE_FRAMES)+(numRead - currRead) > SIZE_FRAMES){  //go to end of frame
+	      stopVal = SIZE_FRAMES;  //end of frame
+	    }
+	    else{  //this is our last frame
+	      stopVal = numRead-currRead;
+	    }
 	    
+	    printf("START VAL: %d\n",startVal);
+	    printf("STOP VAL: %d\n",stopVal);
+
 	    tmpVec = paging->read_page(query->argv[1], startVal, stopVal, flag);
 	    
 	    if(*flag == 1){
 	      sendClient(*(clientInfo->newsock),"ERROR: NO SUCH FILE\n",20);
+	      send = 0;
 	      break;
 	    }
 	    else if(*flag == 2){
 	      sendClient(*(clientInfo->newsock),"ERROR: INVALID BYTE RANGE\n",26);
+	      send = 0;
 	      break;
 	    }
 	    
-	    for(int i = 0; i < tempVec.size(); i++){
+	    for(int i = 0; i < tmpVec.size(); i++){
 	      output.push_back(tmpVec[i]);
 	    } 
 	    
-	    currRead+=numRead;
+	    currRead+=tmpVec.size();
 
+	    std::cout<<"====================================================================="<<std::endl;
+	    std::cout<<"====================================================================="<<std::endl;
+	    std::cout<<"====================================================================="<<std::endl;
+	    std::cout<<"====================================================================="<<std::endl;
+	    std::cout<<"====================================================================="<<std::endl;
+	    std::cout<<"====================================================================="<<std::endl;
+	    std::cout<<"====================================================================="<<std::endl;
+	    std::cout<<"====================================================================="<<std::endl;
+	    std::cout<<"====================================================================="<<std::endl;
+	    std::cout<<"====================================================================="<<std::endl;
+	    std::cout<<"====================================================================="<<std::endl;
+	    std::cout<<"====================================================================="<<std::endl;
+	    std::cout<<"====================================================================="<<std::endl;
+	    std::cout<<"====================================================================="<<std::endl;
+
+	   
+	    printf( "[thread %lu]: Sent: ACK %d\n", tid , tempVec.size());
+	    
+	    //TODO: send bytes to client..........
+
+	    printf( "[thread %lu]: Transferred %d Bytes from offset %d\n", tid , tempVec.size(), startVal);
+	    
 	  }
 
-	  printf("SIZE OF OUTPUT: %d\n", output.size());
-	  printf("numREAD: %d\n", numRead);
-	  
-	  
+	  if(send == 1){
+	    printf("SIZE OF OUTPUT: %lu\n", output.size());
+	    printf("numREAD: %d\n", numRead);
+	    
+	    char * clientOut = (char * )calloc(output.size(), sizeof(char));
+	    for(int i = 0; i  < output.size(); i++){
+	      clientOut[i] = (char) output[i];
+	      std::cout<<"output["<<i<<"] = "<<output[i]<<std::endl;
+	    }
+	    
+	    
+	    
+	    //convert number to char*
+	    std::stringstream strs;
+	    strs << output.size();
+	    std::string temp_str = strs.str();
+	    const char* numOut = (char*) temp_str.c_str();
+	    
+	    //int numDigits = numDig(file_names.size());  //find number of digits
 
+	    
+	    char firstOut[strlen(numOut) + 5];  //5: ack\n space
+	    
+	    strcpy(firstOut,"ACK ");
+	    strcat(firstOut, numOut);
+	    strcat(firstOut,"\n");
+
+	    //ACK
+	    sendClient( *(clientInfo->newsock), firstOut, strlen(firstOut));
+	    
+	    
+	    //file contents
+	    sendClient( *(clientInfo->newsock), clientOut, strlen(clientOut));
+	    
+
+
+	  }
+	  
 
 	  delete flag;
 	  //END CRITICAL SECTION                                                                          
