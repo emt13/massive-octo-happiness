@@ -227,13 +227,6 @@ void init_server(){
     std::cout<<" - "<< all_files[i]<<std::endl;
   }
 
-  paging->delete_file("test-delete.txt");
-
-  all_files = paging->dir();
-  for(unsigned int i = 0; i < all_files.size(); i++){
-    std::cout<<" - "<< all_files[i]<<std::endl;
-  }
-
   printf("DONE WITH SERVER INIT\n");
 
 
@@ -247,7 +240,6 @@ void init_server(){
 //start listening for connections and then starts up threads to handle the commands issued          
 void start_listening(){
   //STORE, DELETE, READ, DIR                                                                        
-
 
 }
 
@@ -340,8 +332,8 @@ void * client_thread(void * arg){
 	    rc: -1 if it already exists
 	    total # written if it doesn't
 	   */
+	  filesys->addFile(fName);
 	  int rc = paging->store(fName, storeInput);       
-
 	  //END CRITICAL SECTION                                                                          
 	  pthread_mutex_unlock( &storeMutex );  /*   V(mutex)  */
 	  
@@ -362,8 +354,6 @@ void * client_thread(void * arg){
 	  else{
 	    sendClient(*(clientInfo->newsock),"ack\n", 4);
 	  }
-
-  
 	}
       }
       if(rc == 0){ //got a command
@@ -392,10 +382,66 @@ void * client_thread(void * arg){
 	else if(query->type == 2){  //read
 	  pthread_mutex_lock( &RDMutex );    /*   P(mutex)  */
 	  //CRITICAL SECTION: read & delete
+	  
+	  int offset = atoi(query->argv[2]);
+	  int numRead = atoi(query->argv[3]);
+	  
+	  int *flag = new int; 
+	  /*
+	    0:success
+	    1:file DNE
+	    2:byte range invalid
+	    ...
+	   */
 
+	  int currRead = 0;
+	  int stopVal = 0;
+
+	  int startVal = 0;
+	  
+	  
+	  std::vector<BYTE> output;
+
+
+	  //if file queued for deletion, spew ERROR: FILE QUEUED FOR DELETION\n to client
+
+	  
+
+	  //use a counter here if you need to do +1 or something (maybe no counter maybe just if(currRead==0) dont add 1, else +1 -------- for startVal
+	  while(currRead != numRead){
+	    std::vector<BYTE> tmpVec;
+	    
+	    startVal = offset+currRead;
+	    stopVal = (startVal+SIZE_FRAMES) % SIZE_FRAMES;
+	    
+	    tmpVec = paging->read_page(query->argv[1], startVal, stopVal, flag);
+	    
+	    if(*flag == 1){
+	      sendClient(*(clientInfo->newsock),"ERROR: NO SUCH FILE\n",20);
+	      break;
+	    }
+	    else if(*flag == 2){
+	      sendClient(*(clientInfo->newsock),"ERROR: INVALID BYTE RANGE\n",26);
+	      break;
+	    }
+	    
+	    for(int i = 0; i < tmpVec.size(); i++){
+	      output.push_back(tmpVec[i]);
+	    } 
+	    
+	    currRead+=numRead;
+
+	  }
+
+	  printf("SIZE OF OUTPUT: %lu\n", output.size());
+	  printf("numREAD: %d\n", numRead);
+	  
+	  
+
+
+	  delete flag;
 	  //END CRITICAL SECTION                                                                          
 	  pthread_mutex_unlock( &RDMutex );  /*   V(mutex)  */
-
 
 	}
 
