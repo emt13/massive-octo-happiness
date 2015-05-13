@@ -105,10 +105,10 @@ FileSystem* filesys;
 
 
 
-void sendClient(int socket, const char * str, int len){
-  int numSent = send( socket, str, len, 0 );
+void sendClient(const char * str, int len){
+  int numSent = send( *(clientInfo->newsock), str, len, 0 );
   fflush( NULL );
-  if ( numSent != len ){
+  if ( numSent != 4 ){
     perror( "send() failed" );
   }
 }
@@ -360,7 +360,7 @@ void * client_thread(void * arg){
 	    }
 	  }
 	  else{
-	    sendClient(*(clientInfo->newsock),"ack\n", 4);
+	    sendClient("ack\n", 4);
 	  }
 
   
