@@ -8,11 +8,11 @@ typedef unsigned char BYTE;
 PagingSystem* ps;
 
 void print_data(std::vector<BYTE>& data){
-	printf("\n");
+//	printf("\n");
 	for(unsigned int i = 0; i < data.size(); i++){
 		printf("%c", (char) data[i]);
 	}
-	printf("\n");
+//	printf("\n");
 }
 
 void test_dir(){
@@ -65,17 +65,54 @@ void test_read(){
 	//int off = 4888;
 	//int num = (5*1024-1) - off;
 
-	
-	int off = 0;
-	int num = 1023;
-
-	printf("  # reading in at %d, %d\n", off, num);
-	
 	std::string file_path(".storage/sample.txt");
 	std::string file_name("sample.txt");
+//--	
+	int off = 0;
+	int num = 1024;
+
+	//printf("  # reading in at %d, %d\n", off, num);
+
 	std::vector<BYTE> data = ps->read_page(file_name, off, num);
 	
-	print_data(data);
+	//print_data(data);
+//--
+	off = 1024;
+	num = 2048;
+
+	//printf("  # reading in at %d, %d\n", off, num);
+
+	data = ps->read_page(file_name, off, num);
+	
+	//print_data(data);
+//--
+	off = 2048;
+	num = 3072;
+
+	//printf("  # reading in at %d, %d\n", off, num);
+
+	data = ps->read_page(file_name, off, num);
+	
+	//print_data(data);
+//--
+	off = 3072;
+	num = 4096;
+
+	//printf("  # reading in at %d, %d\n", off, num);
+
+	data = ps->read_page(file_name, off, num);
+	
+	//print_data(data);
+//--
+	off = 4096;
+	num = 5120;
+
+	//printf("  # reading in at %d, %d\n", off, num);
+
+	data = ps->read_page(file_name, off, num);
+	
+	//print_data(data);
+
 
 	printf("--- finished testing read\n\n");
 }

@@ -17,7 +17,7 @@ std::vector<BYTE> Frame::get_data(int off, int amount){
 
 	last_read = num_reads;
 
-	printf("num_reads: %d - off: %d - amount: %d\n", num_reads, off, amount);
+	//printf("num_reads: %d - off: %d - amount: %d\n", num_reads, off, amount);
 
 	std::vector<BYTE> ret_data;
 
@@ -29,7 +29,7 @@ std::vector<BYTE> Frame::get_data(int off, int amount){
 		if(amount == 0){ break; }
 	}
 
-	printf("ret_data size: %lu\n", ret_data.size());
+	//printf("ret_data size: %lu\n", ret_data.size());
 	return ret_data;
 }
 
@@ -37,7 +37,7 @@ void Frame::store_data(std::string f_name, int p_num, std::vector<BYTE> input){
 	file_name = f_name;
 	page_num = p_num;
 
-	printf("size:  %d - page: %d - input size: %lu\n", size, p_num, input.size());
+	//printf("size:  %d - page: %d - input size: %lu\n", size, p_num, input.size());
 
 	//copy over all of the input data to the internal data
 	for(unsigned int i = 0; i < input.size() && i < size; i++){

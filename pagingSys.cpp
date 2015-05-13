@@ -148,6 +148,7 @@ int PagingSystem::get_LRU(std::string file_name){
 	std::map<std::string, std::vector<int> >::iterator itr = page_table.find(file_name);
 	//if file is already maxed out on frames, use its oldest (index 0)
 	if(itr->second.size() == frames_per_file){
+		//printf("maxed out on frames! %s\n", file_name.c_str());
 		int oldest = 0;
 		for(unsigned int i = 1; i < itr->second.size(); i++){
 			if(frames[itr->second[i]].older(frames[oldest])){
@@ -156,9 +157,11 @@ int PagingSystem::get_LRU(std::string file_name){
 		}
 		return itr->second[oldest];
 	}else{
+		//printf("can still go for other frames: %s\n", file_name.c_str());
 		int oldest = 0;
 		for(unsigned int i = 1; i < frames.size(); i++){
-			if(frames[i].older(frames[oldest])){
+		//	printf("L: %d | R: %d   = %d\n", frames[i].get_time_stamp(), frames[oldest].get_time_stamp(), frames[i].older(frames[oldest]));
+			if(frames[i].older(frames[oldest]) || frames[i].get_time_stamp() == 0){
 				oldest = i;
 			}
 		}	
@@ -170,14 +173,14 @@ void PagingSystem::remove_frame_num_from_page(int frame_to_replace){
 	std::string file_name = frames[frame_to_replace].owner();
 	if(page_table.count(file_name) == 0){ return; }
 	
-	printf("%d: %s\n", frame_to_replace, file_name.c_str());
+	//printf("%d: %s\n", frame_to_replace, file_name.c_str());
 	std::map<std::string, std::vector<int> >::iterator itr = page_table.find(file_name);
-	printf("total frames: %lu\n", itr->second.size());
+	//printf("total frames: %lu\n", itr->second.size());
 	for(unsigned int i = 0; i < itr->second.size(); i++){
-		printf(" -- %d\n", i);
+		//printf(" -- %d\n", i);
 		if(itr->second[i] == frame_to_replace){
 			itr->second.erase(itr->second.begin() + i);
-			printf(" -- removed at index: %d", i);
+	//		printf(" -- removed at index: %d", i);
 			return;
 		}
 	}
@@ -201,9 +204,9 @@ void PagingSystem::store_file_data(std::string file_path, std::string file_name,
 
 	read(fd, file_data, size_frames);
 
-	printf(" 0: (%c) 1023: (%c) \n", (char) file_data[0], (char) file_data[1023]);
+	//printf(" 0: (%c) 1023: (%c) \n", (char) file_data[0], (char) file_data[1023]);
 
-	printf("read in data\n");
+	//printf("read in data\n");
 
 	std::vector<BYTE> byte_vec(size_frames, (BYTE) 0);
 
@@ -212,7 +215,7 @@ void PagingSystem::store_file_data(std::string file_path, std::string file_name,
 		byte_vec[i] = file_data[i];
 	}
 
-	printf("--------------------------------\n");
+	//printf("--------------------------------\n");
 
 //	for(unsigned int i = 0; i < byte_vec.size(); i++){
 //		printf("%c", (char) byte_vec[i]);
@@ -235,7 +238,7 @@ int PagingSystem::page_already_loaded(std::string file_name, int page_num){
 
 std::vector<BYTE> PagingSystem::read_page(std::string file_name, int offset, int amount){
 
-	printf(" ( -- reading -- ) \n");
+	//printf(" ( -- reading -- ) \n");
 
 	std::string file_path(STORAGE_STR);
 	file_path.append(SLASH_STR);
@@ -243,7 +246,7 @@ std::vector<BYTE> PagingSystem::read_page(std::string file_name, int offset, int
 
 	//if it is not in the page table, add it
 	if(page_table.count(file_name) == 0){
-		printf("adding %s to the page_table\n", file_name.c_str());
+	//	printf("adding %s to the page_table\n", file_name.c_str());
 		std::vector<int> tmp;
 		page_table.insert( std::pair<std::string, std::vector<int> >(file_name, tmp) );
 	}
@@ -257,34 +260,34 @@ std::vector<BYTE> PagingSystem::read_page(std::string file_name, int offset, int
 	}
 
 	offset = offset % size_frames;
-	printf("page_num: %d\noffset: %d\n", page_num, offset);
+	//printf("page_num: %d\noffset: %d\n", page_num, offset);
 	//if that page was already loaded, use it
 	int rc = page_already_loaded(file_name, page_num);
 	if(rc != -1){
-		printf("page already loaded in frame: %d\n", rc);
+	//	printf("page already loaded in frame: %d\n", rc);
 		return frames[rc].get_data(offset, amount);
 	}
 
 	//get the next available frame to replace according to LRU
 	int frame_to_replace = get_LRU(file_name);
 
-	printf("replacing frame: %d\n", frame_to_replace);
+	//printf("replacing frame: %d\n", frame_to_replace);
 
 	//remove the frame number from that entry
 	remove_frame_num_from_page(frame_to_replace);
 
-	printf("removed frame\n");
+	//printf("removed frame\n");
 	//add the frame number to the page table for this entry
 	add_frame_num_to_page(file_name, frame_to_replace);
 
-	printf("added frame\n");
+	//printf("added frame\n");
 	//replace the frame information with the file information
 	//make sure that the storing of data guarantees that the buffer maintains size	
 	store_file_data(file_path, file_name, page_num, frame_to_replace, amount);
 
 	//printf("stored file data\n");
 
-	printf("Allocated page %d to frame %d\n", page_num, frame_to_replace);
+	printf("Allocated page %d to frame %d\n", page_num+1, frame_to_replace);
 
 	//display server output	
 
