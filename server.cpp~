@@ -290,7 +290,7 @@ void * client_thread(void * arg){
       n = recv( *(clientInfo->newsock), buffer, BUFFER_SIZE, 0 );
     }
     else{
-      n = recv( *(clientInfo->newsock), tmpBig, numBytes, 0 );
+      n = read( *(clientInfo->newsock), tmpBig, numBytes );
     }
     
     if ( n < 0 ){
@@ -366,11 +366,13 @@ void * client_thread(void * arg){
 	  
 	  if(rc == -1){  //file already existed,  SORRY CHAP
 	    //printf("FILE ALREADY EXISTED\n");
-	    printf( "[thread %lu] SENT: ERROR: FILE EXISTS\n",tid);
+	    printf( "[thread %lu] Sent: ERROR: FILE EXISTS\n",tid);
 	    sendClient(*(clientInfo->newsock),"ERROR: FILE EXISTS\n",19);
 	    
 	  }
 	  else{
+	    printf( "[thread %lu] Transferred file (%d bytes)\n",tid, numBytes);
+	    printf( "[thread %lu] Sent: ACK\n",tid);
 	    sendClient(*(clientInfo->newsock),"ACK\n", 4);
 	  }
 	}

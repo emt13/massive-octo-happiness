@@ -113,6 +113,14 @@ void sendClient(int socket, const char * str, int len){
   }
 }
 
+void sendContents(int socket, const char * str, int len){
+  int numSent = write( socket, str, len);
+  fflush( NULL );
+  if ( numSent != len ){
+    perror( "send() failed" );
+  }
+}
+
 
 
 
@@ -290,7 +298,7 @@ void * client_thread(void * arg){
       n = recv( *(clientInfo->newsock), buffer, BUFFER_SIZE, 0 );
     }
     else{
-      n = recv( *(clientInfo->newsock), tmpBig, numBytes, 0 );
+      n = read( *(clientInfo->newsock), tmpBig, numBytes );
     }
     
     if ( n < 0 ){
@@ -465,22 +473,6 @@ void * client_thread(void * arg){
 	    */
 	    currRead+=tmpVec.size();
 
-	    /*
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    */
 	   
 	    
 	    //printf("SIZE OF OUTPUT: %lu\n", output.size());
@@ -516,7 +508,7 @@ void * client_thread(void * arg){
 	  
 	      
 	    //file contents
-	    sendClient( *(clientInfo->newsock), clientOut, strlen(clientOut));
+	    sendContents( *(clientInfo->newsock), clientOut, strlen(clientOut));
 	    printf( "[thread %lu]: Transferred %lu Bytes from offset %d\n", tid , tmpVec.size(), startVal);
 	      
 	    free(clientOut);
