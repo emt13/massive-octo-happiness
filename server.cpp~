@@ -143,16 +143,20 @@ int parseQuery(char *comm, struct queryType * query){
   //to be deleted in client_thread
   query->argc = 0;
   
-  printf("COMM: %s\n",comm);
+  //  printf("COMM: %s\n",comm);
 
   char * tmp = strtok(comm, " ");
   int counter = 0;
   
-  printf("tmp: %s\n",tmp);
+  //printf("tmp: %s\n",tmp);
   
   if(tmp == NULL){
     printf("TEMP IS NULL\n");
     return 1; //should not be the case but for safety
+  }
+
+  if(strcmp(tmp,"\n")==0){ // no input
+    return -1;
   }
 
   //the \n was also a part of it (which is fine, because should be <comm> w/ a space
@@ -278,7 +282,7 @@ void * client_thread(void * arg){
   
   
   do{
-    printf( "[thread %lu]: Blocked on recv()\n", tid );
+    //printf( "[thread %lu]: Blocked on recv()\n", tid );
     
     /* can also use read() and write()..... */
     
@@ -293,25 +297,40 @@ void * client_thread(void * arg){
       perror( "recv() failed" );
     }
     else if ( n == 0 ){
-      printf( "[thread %lu]: Rcvd 0 from recv(); closing socket\n", tid );
+      //socket closed!
+      //printf( "[thread %lu]: Rcvd 0 from recv(); closing socket\n", tid );
     }
     else{
 
       int rc = 1;
       if(command == 1){  //parse the command
 	buffer[n] = '\0';  /* assuming text.... */
-	printf( "[thread %lu]: Rcvd message from %s: %s\n",tid,inet_ntoa( (struct in_addr)clientInfo->client->sin_addr) ,buffer );
+	//printf( "[thread %lu]: Rcvd message from %s: %s\n",tid,inet_ntoa( (struct in_addr)clientInfo->client->sin_addr) ,buffer );
 	
 	rc = parseQuery(buffer,query);
       }
 
+      if(rc == -1){  //no input, do no acknowledge
+	continue;
+      }
+
       if(rc == 1 && command == 1){
 	//no command and expecting command
-	printf( "[thread %lu]: ERROR: no such command\n", tid );
+	char * comm = strtok(buffer, " ");
+	if(comm[strlen(comm)-1] == '\n'){
+	  comm[strlen(comm)-1] ='\0';
+	}
+	printf( "[thread %lu] Rcvd: %s\n", tid, comm);
+	printf( "[thread %lu] Sent: ERROR: NO SUCH COMMAND\n", tid );
+	int sendNum = send( *(clientInfo->newsock), "ERROR: NO SUCH COMMAND\n", 23, 0 );
+	fflush( NULL );
+	if ( sendNum != 23){
+	  perror( "send() failed" );
+	}
       }
       if(rc == 1 && command == 0){  //2nd part of store
 	//was expecting file contents
-	printf( "[thread %lu]: file contents: %s\n", tid,tmpBig);
+	//printf( "[thread %lu] file contents: %s\n", tid,tmpBig);
 	if(currBytes == 0){
 	  strncpy(bigBuff, tmpBig, numBytes);
 	}
@@ -346,12 +365,10 @@ void * client_thread(void * arg){
 	  command = 1;
 	  
 	  if(rc == -1){  //file already existed,  SORRY CHAP
-	    printf("FILE ALREADY EXISTED\n");
-	    int sendN = send( *(clientInfo->newsock), "ERROR: FILE EXISTS\n", 19, 0 );
-	    fflush( NULL );
-	    if ( sendN != 19){
-	      perror( "send() failed" );
-	    }
+	    //printf("FILE ALREADY EXISTED\n");
+	    printf( "[thread %lu] SENT: ERROR: FILE EXISTS\n",tid);
+	    sendClient(*(clientInfo->newsock),"ERROR: FILE EXISTS\n",19);
+	    
 	  }
 	  else{
 	    sendClient(*(clientInfo->newsock),"ACK\n", 4);
@@ -360,16 +377,17 @@ void * client_thread(void * arg){
       }
       if(rc == 0){ //got a command
 	//debug print
+	/*
 	printf("argc: %d\n",query->argc);
 	printf("type: %d\n",query->type);
 	for(int i = 0; i < query->argc; i++){
 	  printf("argv[%d]: %s\n", i, query->argv[i]);
 	}
-
+	*/
 
 
 	if(query->type == 1){  //store
-	  
+	    
 	  numBytes = atoi(query->argv[2]);
 	  command = 0;
 	  bigBuff = (char *) calloc(numBytes, sizeof(char));
@@ -377,6 +395,9 @@ void * client_thread(void * arg){
 	  
 	  fName = (char *) calloc(strlen(query->argv[1]), sizeof(char));
 	  strcpy(fName, query->argv[1]);
+	  
+	  printf( "[thread %lu] Rcvd: STORE %s %d\n",tid, fName, numBytes);
+	  
 
 	}
 
@@ -531,6 +552,7 @@ void * client_thread(void * arg){
 	  if(rc == 1){
 	    //printf("FILE NOT FOUND: %s\n",query->argv[1]);
 	    sendClient( *(clientInfo->newsock), "ERROR: NO SUCH FILE\n",20);
+	    printf( "[thread %lu] Sent: ERROR: NO SUCH FILE\n", tid);
 	  }
 	  else{
 	    //how well does it work with bum filename?
@@ -544,9 +566,12 @@ void * client_thread(void * arg){
 
 
 	else if(query->type == 4){  //dir command, no synchronization required
+
 	  file_names = paging->dir();
 	  //no need for 0 files check, this line is generalized
 	  //Note: no files just returns 0\n
+
+	  printf( "[thread %lu] Rcvd: DIR\n", tid);
 
 	  if(file_names.size()==0){
 	    n = send( *(clientInfo->newsock), "0\n", 2, 0 );
@@ -568,8 +593,8 @@ void * client_thread(void * arg){
 	    
 	    int numDigits = numDig(file_names.size());  //find number of digits
 	    
-	    std::cout<<"numFiles: "<<numFiles<<std::endl;
-	    std::cout<<"numDigits: "<<numDigits<<std::endl;
+	    //std::cout<<"numFiles: "<<numFiles<<std::endl;
+	    //std::cout<<"numDigits: "<<numDigits<<std::endl;
 	    
 	    char outTmp[numDigits+1];
 	    strcpy(outTmp, numFiles);
@@ -582,13 +607,13 @@ void * client_thread(void * arg){
 	    }
 	    
 	    for(unsigned int i = 0; i < file_names.size(); i++){
-	      std::cout<<file_names[i]<<std::endl;
+	      //std::cout<<file_names[i]<<std::endl;
 	      std::string str = file_names[i];
 	      const char* charStr = (char*) str.c_str();
 	      char out[strlen(charStr)+1];
 	      strcpy(out, charStr);
 	      out[strlen(charStr)]='\n';
-
+	      
 	      n = send( *(clientInfo->newsock), out, strlen(charStr) + 1, 0 );
 	      fflush( NULL );
 	      if ( (unsigned int)n != strlen(charStr) + 1){
@@ -596,9 +621,15 @@ void * client_thread(void * arg){
 	      }
 
 
+
+
 	    }
 	  }
-	  std::cout<<"Done with DIR"<<std::endl;
+	  //std::cout<<"Done with DIR"<<std::endl;
+	  
+
+	  printf( "[thread %lu] Sent: ACK & %lu file names\n",tid , file_names.size());
+	  
 	  /*
 
 	        //ACK
@@ -629,7 +660,7 @@ void * client_thread(void * arg){
      returns 0, indicating the remote/client side has
      closed its socket */
   
-  printf( "[thread %lu]: Bye!\n", tid );
+  printf( "[thread %lu] Client closed its socket....terminating\n", tid );
   close( *(clientInfo->newsock) );
   
   delete [] buffer;
@@ -667,7 +698,7 @@ void * exitThread(void *){
 
 int main()
 {
-  std::cout<<"Hello World!"<<std::endl;
+  //std::cout<<"Hello World!"<<std::endl;
   
   init_server();
 

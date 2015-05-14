@@ -26,7 +26,7 @@
 #define PREV_DIR_STR ".."
 
 /* read/delete global mutex variable */
-pthread_mutex_t RDmutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t RDMutex = PTHREAD_MUTEX_INITIALIZER;
 
 
 

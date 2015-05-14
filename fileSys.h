@@ -99,9 +99,9 @@ class FileSystem{
   //could implement waiting for reads to finish here... but probably better in server
   //0: success, 1: failure
   int removeFile(char * name){
-    printf("removeFile--finding file\n");
+    //printf("removeFile--finding file\n");
     int index = findFile(name);
-    printf("found file!: index = %d\n",index);
+    //printf("found file!: index = %d\n",index);
     if(index == -1){
             return 1;
     }
