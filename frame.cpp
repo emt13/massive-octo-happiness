@@ -12,8 +12,13 @@ Frame::Frame(int s){
 
 //the offset of the frame and then the amount of bytes from that frame
 std::vector<BYTE> Frame::get_data(int off, int amount){
-
+	
+	pthread_mutex_t mut = PTHREAD_MUTEX_INITIALIZER;
+	pthread_mutex_lock(&mut);
+	
 	num_reads++;
+
+	pthread_mutex_unlock(&mut);
 
 	last_read = num_reads;
 
