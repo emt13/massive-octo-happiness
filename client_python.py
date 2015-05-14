@@ -3,6 +3,7 @@ import os
 import time
 
 PORT_NUM = 8765
+HOST = "74.74.74.74"
 
 #	Read in file_name using open
 #	Store commands into a list
@@ -17,7 +18,12 @@ commands = []
 for line in test_file:
 	commands.append(line)
 
-for line in commands:
-	print line
-
 test_file.close()
+
+socket = socket.socket()
+socket.connect((HOST, PORT_NUM))
+
+for line in commands:
+	socket.send(line)
+
+socket.close
