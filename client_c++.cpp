@@ -16,13 +16,32 @@
 
 #define PORT_NUM 8765
 
+void loadFile(std::vector<std::string> *commands) {
+	std::string file_name = "", line = "";
+	std::cout << "Please provide a local test file: ";
+	std::cin >> file_name;
+	std::ifstream file;
+	file.open(file_name);
+	while (std::getline(file, line)) {
+		commands -> push_back(line);
+	}
+	file.close();
+}
+
+
 int main() {
 
 	/*
-	 *	- READ IN TEST FILE
-	 *	- Store commands into vector
 	 *	- Connect to server via PORT_NUM
 	 *	- Read through vector and pass each command to server
 	 *
 	 * */
+	std::vector<std::string> commands;
+	loadFile(&commands);
+	
+	for (int i = 0; i < commands.size(); ++i) {
+		std::cout << commands[i] << std::endl;
+	}
+
+	return EXIT_SUCCESS;
 }
