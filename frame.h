@@ -2,6 +2,7 @@
 #define FRAME_H
 
 #include <string>
+#include <pthread.h>
 #include <vector>
 
 typedef unsigned char BYTE;
