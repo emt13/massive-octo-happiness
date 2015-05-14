@@ -312,12 +312,176 @@ void test_read(){
 	off = 5632;
 	num = 256;
 	data = ps->read_page(file_name, off, num, flag);
-
-
-
-
-
+//--------------------------------
+	//ps->delete_file(file_name);
+//--
+	off = 1024;
+	num = 1024;
+	file_name = std::string("sample6.txt");
+//	printf("  # reading in at %d, %d\n", off, num);
+	data = ps->read_page(file_name, off, num, flag);
 	
+	//print_data(data);
+//--
+	off = 2048;
+	num = 1024;
+
+//	printf("  # reading in at %d, %d\n", off, num);
+
+	data = ps->read_page(file_name, off, num, flag);
+	
+	//print_data(data);
+//--
+	off = 3072;
+	num = 1024;
+
+	//printf("  # reading in at %d, %d\n", off, num);
+
+	data = ps->read_page(file_name, off, num, flag);
+	
+	//print_data(data);
+//--
+	off = 4096;
+	num = 1024;
+
+	//printf("  # reading in at %d, %d\n", off, num);
+
+	data = ps->read_page(file_name, off, num, flag);
+	
+	//print_data(data);
+
+	off = 5120;
+	num = 512;
+
+	data = ps->read_page(file_name, off, num, flag);
+	
+//	print_data(data);
+
+	off = 5632;
+	num = 256;
+	data = ps->read_page(file_name, off, num, flag);
+//--------------------------------
+//--
+	off = 1024;
+	num = 1024;
+	file_name = std::string("sample7.txt");
+//	printf("  # reading in at %d, %d\n", off, num);
+	data = ps->read_page(file_name, off, num, flag);
+	
+	//print_data(data);
+//--
+	off = 2048;
+	num = 1024;
+
+//	printf("  # reading in at %d, %d\n", off, num);
+
+	data = ps->read_page(file_name, off, num, flag);
+	
+	//print_data(data);
+//--
+	off = 3072;
+	num = 1024;
+
+	//printf("  # reading in at %d, %d\n", off, num);
+
+	data = ps->read_page(file_name, off, num, flag);
+	
+	//print_data(data);
+//--
+	off = 4096;
+	num = 1024;
+
+	//printf("  # reading in at %d, %d\n", off, num);
+
+	data = ps->read_page(file_name, off, num, flag);
+	
+	//print_data(data);
+
+	off = 5120;
+	num = 512;
+
+	data = ps->read_page(file_name, off, num, flag);
+	
+//	print_data(data);
+
+	off = 5632;
+	num = 256;
+	data = ps->read_page(file_name, off, num, flag);
+//--------------------------------
+//--
+	off = 1024;
+	num = 1024;
+	file_name = std::string("sample8.txt");
+//	printf("  # reading in at %d, %d\n", off, num);
+	data = ps->read_page(file_name, off, num, flag);
+	
+	//print_data(data);
+//--
+	off = 2048;
+	num = 1024;
+
+//	printf("  # reading in at %d, %d\n", off, num);
+
+	data = ps->read_page(file_name, off, num, flag);
+	
+	//print_data(data);
+//--
+	off = 3072;
+	num = 1024;
+
+	//printf("  # reading in at %d, %d\n", off, num);
+
+	data = ps->read_page(file_name, off, num, flag);
+	
+	//print_data(data);
+//--
+	off = 4096;
+	num = 1024;
+
+	//printf("  # reading in at %d, %d\n", off, num);
+
+	data = ps->read_page(file_name, off, num, flag);
+	
+	//print_data(data);
+
+	off = 5120;
+	num = 512;
+
+	data = ps->read_page(file_name, off, num, flag);
+	
+//	print_data(data);
+
+	off = 5632;
+	num = 256;
+	data = ps->read_page(file_name, off, num, flag);
+//--------------------------------
+//--
+	off = 1024;
+	num = 1024;
+	file_name = std::string("sample9.txt");
+//	printf("  # reading in at %d, %d\n", off, num);
+	data = ps->read_page(file_name, off, num, flag);
+	
+	//print_data(data);
+//--
+	off = 2048;
+	num = 1024;
+
+//	printf("  # reading in at %d, %d\n", off, num);
+
+	data = ps->read_page(file_name, off, num, flag);
+//--------------------------------
+//--
+	off = 0;
+	num = 4;
+	file_name = std::string("test-store.txt");
+//	printf("  # reading in at %d, %d\n", off, num);
+	data = ps->read_page(file_name, off, num, flag);
+	
+	//print_data(data);
+
+
+
 
 	printf("--- finished testing read\n\n");
 
