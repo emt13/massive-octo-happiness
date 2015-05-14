@@ -395,7 +395,7 @@ void * client_thread(void * arg){
 	  //if file queued for deletion
 	  File * fileP;
 	  int fileIndex = filesys->findFile(query->argv[1]);
-	  printf("Done with find\n");
+	  //printf("Done with find\n");
 	  if(fileIndex != -1){  //file exists
 	    
 	    fileP = filesys->files[fileIndex];

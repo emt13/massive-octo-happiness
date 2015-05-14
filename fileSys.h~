@@ -52,10 +52,10 @@ class FileSystem{
   //Functions
   //index or -1 if DNE
   int findFile(char * name){
-    printf("find name: %s\tnum_files: %d\n",name,num_files);
+    //printf("find name: %s\tnum_files: %d\n",name,num_files);
     
     for(int i = 0; i < num_files;i++){
-      printf("files[%d]->file_name: %s\n",i,files[i]->file_name);
+      //printf("files[%d]->file_name: %s\n",i,files[i]->file_name);
       if(strcmp(files[i]->file_name,name) == 0){
 	return i;
       }

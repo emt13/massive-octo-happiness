@@ -116,10 +116,10 @@ class FileSystem{
       //wait for reads to finish
     }
 
-    std::cout<<"deleted"<<std::endl;
+    //std::cout<<"deleted"<<std::endl;
     delete files[index];
     files.erase(files.begin()+index);
-    std::cout<<"erased"<<std::endl;
+    //std::cout<<"erased"<<std::endl;
     num_files--;
     
     return 0;
