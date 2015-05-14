@@ -201,6 +201,9 @@ void * client_thread(void * arg){
   int currBytes = 0;
   char *fName;
 
+  std::vector<BYTE> storeInput;
+	
+
   struct queryType * query = new struct queryType; 
   query->argv = new char *[MAX_ARG];
   
@@ -260,28 +263,38 @@ void * client_thread(void * arg){
       if(rc == 1 && command == 0){  //2nd part of store
 	//was expecting file contents
 
+	  
+	for(int i = 0; i < n; i++){  //n is number of bytes read
+	  storeInput.push_back((BYTE)tmpBig[i]);
+	}
 
+	
+	//debug print
+	for(unsigned int i = 0; i < storeInput.size(); i++){
+	  printf("storeInput[%u]: %c\n",i,(char)storeInput[i]);
+	}
+
+
+	/*
 	if(currBytes == 0){
 	  strncpy(bigBuff, tmpBig, numBytes);
 	}
 	else{
 	  strncat(bigBuff, tmpBig,numBytes-currBytes);
 	}
+	*/
+
 	currBytes+=n;  //n set by recv, numBytes received
 		
 	if(currBytes == numBytes){  //ready to store, go ahead and lock
 	  pthread_mutex_lock( &storeMutex );    /*   P(mutex)  */
 	  //CRITICAL SECTION: storing
-	  std::vector<BYTE> storeInput;
 	  
-	  for(int i = 0; i < numBytes; i++){
-	    storeInput.push_back((BYTE)bigBuff[i]);
-	  }
 	  
 	  /*
 	    rc: -1 if it already exists
 	    total # written if it doesn't
-	   */
+	  */
 	  filesys->addFile(fName);
 	  int rc = paging->store(fName, storeInput);       
 	  //END CRITICAL SECTION                                                                          
@@ -302,6 +315,11 @@ void * client_thread(void * arg){
 	    printf( "[thread %lu] Sent: ACK\n",tid);
 	    sendClient(*(clientInfo->newsock),"ACK\n", 4);
 	  }
+	  
+
+	  currBytes = 0;
+	  storeInput.clear();
+
 	}
       }
       if(rc == 0){ //got a command
@@ -313,9 +331,9 @@ void * client_thread(void * arg){
 	if(query->type == 1){  //store
 	
 	  if(query->argc != 3){
-	    printf( "[thread %lu] Rcvd: STORE with %d commands\n",tid, query->argc);
+	    printf( "[thread %lu] Rcvd: STORE with %d arguments\n",tid, query->argc);
 	    printf( "[thread %lu] Sent: ERROR: INCORRECT ARGUMENTS\n",tid);
-	    sendClient(*(clientInfo->newsock),"ERROR: INCORRECT ARGUMENTS",27);
+	    sendClient(*(clientInfo->newsock),"ERROR: INCORRECT ARGUMENTS\n",27);
 	    continue;
 	  }
   
@@ -343,7 +361,7 @@ void * client_thread(void * arg){
 	  //CRITICAL SECTION: read & delete
 
 	  if(query->argc != 4){
-	    printf( "[thread %lu] Rcvd: READ with %d commands\n",tid, query->argc);
+	    printf( "[thread %lu] Rcvd: READ with %d arguments\n",tid, query->argc);
 	    printf( "[thread %lu] Sent: ERROR: INCORRECT ARGUMENTS\n",tid);
 	    sendClient(*(clientInfo->newsock),"ERROR: INCORRECT ARGUMENTS\n",27);
 	    continue;
@@ -471,7 +489,6 @@ void * client_thread(void * arg){
 	    
 	    
 	    
-	    
 	    free(clientOut);
 	    
 	  }
@@ -495,7 +512,7 @@ void * client_thread(void * arg){
 
 
 	  if(query->argc != 2){
-	    printf( "[thread %lu] Rcvd: DELETE with %d commands\n",tid, query->argc);
+	    printf( "[thread %lu] Rcvd: DELETE with %d arguments\n",tid, query->argc);
 	    printf( "[thread %lu] Sent: ERROR: INCORRECT ARGUMENTS\n",tid);
 	    sendClient(*(clientInfo->newsock),"ERROR: INCORRECT ARGUMENTS\n",27);
 	    continue;
