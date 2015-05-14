@@ -1,8 +1,12 @@
+#ifndef PAGINGSYS_H
+#define PAGINGSYS_H
+
 // Evan Thompson, Jack Cusick, Tausif Ahmed
 
 //Perform LRU on replacement of frames
 //
 //Allocate frames only on demand
+
 
 #include <map>
 #include <vector>
@@ -67,17 +71,22 @@ class PagingSystem{
 		int get_size_frames(){ return size_frames; }
 		int get_max_frames_per_file(){ return frames_per_file; }
 
-		//bool load_file(std::string file_name);
-
+		//reads a page into the frames and then returns what it wants
 		std::vector<BYTE> read_page(std::string file_name, int offset, int amount, int* flag);
 
+		//stores a file onto the server
 		int store(std::string file_name, std::vector<BYTE> data);
-
+		
+		//deletes a file 
 		int delete_file(std::string);
 
+		//returns a vector of all of the file names in .storage
 		std::vector<std::string> dir();
 
 
 		void print_stats();
 
 };
+
+
+#endif

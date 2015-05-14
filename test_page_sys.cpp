@@ -8,11 +8,9 @@ typedef unsigned char BYTE;
 PagingSystem* ps;
 
 void print_data(std::vector<BYTE>& data){
-//	printf("\n");
 	for(unsigned int i = 0; i < data.size(); i++){
 		printf("%c", (char) data[i]);
 	}
-//	printf("\n");
 }
 
 void test_dir(){
@@ -479,7 +477,53 @@ void test_read(){
 	data = ps->read_page(file_name, off, num, flag);
 	
 	//print_data(data);
+//--------------------------------
+//--
+	off = 1024;
+	num = 1024;
+	file_name = std::string("sample10.txt");
+//	printf("  # reading in at %d, %d\n", off, num);
+	data = ps->read_page(file_name, off, num, flag);
+	
+	//print_data(data);
+//--
+	off = 2048;
+	num = 1024;
 
+//	printf("  # reading in at %d, %d\n", off, num);
+
+	data = ps->read_page(file_name, off, num, flag);
+	
+	//print_data(data);
+//--
+	off = 3072;
+	num = 1024;
+
+	//printf("  # reading in at %d, %d\n", off, num);
+
+	data = ps->read_page(file_name, off, num, flag);
+	
+	//print_data(data);
+//--
+	off = 4096;
+	num = 1024;
+
+	//printf("  # reading in at %d, %d\n", off, num);
+
+	data = ps->read_page(file_name, off, num, flag);
+	
+	//print_data(data);
+
+	off = 5120;
+	num = 512;
+
+	data = ps->read_page(file_name, off, num, flag);
+	
+//	print_data(data);
+
+	off = 5632;
+	num = 256;
+	data = ps->read_page(file_name, off, num, flag);
 
 
 
