@@ -10,17 +10,17 @@ typedef unsigned char BYTE;
 class Frame{
 	
 	private:
-		
+		//keeps track of the size of the buffer		
 		unsigned int size;
 		std::vector<BYTE> data;
-
+		//last time the file was read
 		unsigned int last_read;
-
+		//the owners name
 		std::string file_name;
-
+		//the page number of the owner
 		int page_num;
 	public: 
-
+		//keeps track of the oldest read
 		static unsigned int num_reads;
 		
 		Frame(int s);
@@ -41,9 +41,5 @@ class Frame{
 		
 		int get_page_num(){ return page_num; }
 };
-
-/*bool operator<(Frame &f1, Frame &f2){
-	return f1.get_time_stamp() < f2.get_time_stamp();
-}*/
 
 #endif
