@@ -1,0 +1,480 @@
+
+SPRING 2015 CSCI-4210/6140
+
+FINAL EXAM:
+-- Comprehensive
+-- Five equally weighted questions (three of which
+   will be C systems programming questions, two of
+   which will be theory/algorithm questions)
+-- Two double-sided 8.5"x11" crib sheets allowed
+-- Final exams will not be handed back or available
+   for review
+-- Study all C examples posted on the course website
+-- Expect there to be questions similar in format to
+   the midterm exam (e.g. what is the exact output
+   of the given code)
+-- For the additional sample questions posted below,
+   no solutions will be posted
+
+
+Here are the sample midterm questions again
+(with selected solutions):
+
+========================================================
+WHAT IS THE EXACT OUTPUT OF THE FOLLOWING CODE?
+FOR ANY FILES WRITTEN TO, WHAT ARE THEIR EXACT CONTENTS?
+========================================================
+
+/* midterm-ex00.c */
+
+#include <stdio.h>
+#include <sys/types.h>
+#include <stdlib.h>
+
+int main()
+{
+  int x = 150;
+  printf( "PARENT: x is %d\n", x );
+
+  printf( "PARENT: forking...\n" );
+  pid_t pid = fork();
+  printf( "PARENT: forked...\n" );
+
+  if ( pid == 0 )
+  {
+    printf( "CHILD: happy birthday\n" );
+    x *= 2;
+    printf( "CHILD: %d\n", x );
+  }
+  else
+  {
+    wait( NULL );
+
+    printf( "PARENT: child completed\n" );
+    x *= 2;
+    printf( "PARENT: %d\n", x );
+  }
+
+  return 0;
+}
+
+SOLUTION:
+
+	      <parent>
+              PARENT: x is 150
+              PARENT: forking...
+
+(the lines below are interleaved with one another,
+ though the relative order in <child> is as shown)
+<parent>                <child>
+PARENT: forked...       PARENT: forked...
+                        CHILD: happy birthday
+                        CHILD: 300
+
+(the lines below are always displayed last)
+              <parent>
+              PARENT: child completed
+              PARENT: 300
+
+====================================================
+
+/* midterm-ex01.c */
+
+#include <stdio.h>
+#include <unistd.h>
+
+int main()
+{
+  int rc;
+  printf( "ONE\n" );
+  rc = fork();
+  printf( "TWO\n" );
+  if ( rc == 0 ) { printf( "THREE\n" ); }
+  if ( rc > 0 ) { printf( "FOUR\n" ); }
+  return 0;
+}
+
+SOLUTION:
+          <parent>
+          ONE
+
+(the lines below are interleaved with one another,
+ though the relative orders in both <parent> and
+ <child> are as shown)
+<parent>         <child>
+TWO              TWO
+FOUR             THREE
+
+====================================================
+
+/* midterm-ex02.c */
+
+#include <stdio.h>
+#include <unistd.h>
+
+int main()
+{
+  printf( "ONE\n" );
+  fprintf( stderr, "ERROR: ONE\n" );
+  int rc = close( 1 );
+
+  printf( "TWO\n" );
+  fprintf( stderr, "ERROR: TWO\n" );
+  rc = dup2( 2, 1 );
+
+  printf( "THREE\n" );
+  fprintf( stderr, "ERROR: THREE\n" );
+  rc = close( 2 );
+
+  printf( "FOUR\n" );
+  fprintf( stderr, "ERROR: FOUR\n" );
+  return 0;
+}
+
+SOLUTION:
+<terminal output>
+ONE
+ERROR: ONE
+ERROR: TWO
+THREE
+ERROR: THREE
+FOUR
+
+====================================================
+/* midterm-ex03.c */
+
+#include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
+
+int main()
+{
+  int fd;
+  close( 2 );
+#if 0
+  close( 1 );  /* <== add this line later (part b) */
+#endif
+  printf( "HI\n" );
+  fflush( stdout );
+  fd = open( "newfile.txt", O_WRONLY | O_CREAT | O_TRUNC, 0600 );
+
+  printf( "%d\n", fd );
+  printf( "WHAT?\n" );
+  fprintf( stderr, "ERROR\n" );
+  return 0;
+}
+
+SOLUTION:
+<terminal output>
+HI
+2
+WHAT?
+
+<newfile.txt output>
+ERROR
+
+
+If close( 1 ) is uncommented, then:
+<terminal output>
+-none-
+
+<newfile.txt output>
+1
+WHAT?
+
+====================================================
+
+/* midterm-ex04.c */
+
+#include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/wait.h>
+
+int main()
+{
+  int fd;
+  close( 2 );
+#if 0
+  close( 1 );  /* <== add this line later (part b) */
+#endif
+  printf( "HI\n" );
+  fflush( stdout );
+  fd = open( "newfile.txt", O_WRONLY | O_CREAT | O_TRUNC, 0600 );
+
+  printf( "%d\n", fd );
+  printf( "WHAT?\n" );
+  fprintf( stderr, "ERROR\n" );
+
+  fflush( stdout );
+
+  int rc = fork();
+  if ( rc == 0 )
+  {
+    printf( "AGAIN?\n" );
+    fprintf( stderr, "ERROR ERROR\n" );
+  }
+  else
+  {
+    wait( NULL );
+  }
+
+  printf( "BYE\n" );
+  fprintf( stderr, "HELLO\n" );
+  return 0;
+}
+
+SOLUTION:
+<terminal output>
+HI
+2
+WHAT?
+AGAIN?
+BYE   <child displays this>
+BYE   <parent displays this>
+
+<newfile.txt output>
+ERROR
+ERROR ERROR
+HELLO  <child displays this>
+HELLO  <parent displays this>
+
+====================================================
+
+/* midterm-ex05.c */
+
+#include <stdio.h>
+#include <unistd.h>
+
+int main()
+{
+  int rc;
+  int p[2];
+  rc = pipe( p );
+  printf( "%d %d %d\n", getpid(), p[0], p[1] );
+
+  rc = fork();
+
+  if ( rc == 0 )
+  {
+    rc = write( p[1], "ABCDEFGHIJKLMNOPQRSTUVWXYZ", 26 );
+  }
+
+  if ( rc > 0 )
+  {
+    char buffer[40];
+    rc = read( p[0], buffer, 8 );
+    buffer[rc] = '\0';
+    printf( "%d %s\n", getpid(), buffer );
+  }
+
+  printf( "BYE\n" );
+
+  return 0;
+}
+
+========================================================
+
+1. Given the table of process burst times, arrival times,
+   and priorities below, calculate the turnaround time,
+   total wait time, and number of preemptions for each
+   process using the following scheduling algorithms:
+
+   a. FCFS
+
+   b. SJF
+
+   c. SRT
+
+   d. Priority scheduling with SJF (note that the
+      lower the priority value, the higher priority
+      the process has)
+
+   e. RR with a time slice of 3ms
+
+
+   PROCESS   BURST TIME   ARRIVAL TIME   PRIORITY
+   ----------------------------------------------
+   P1         7ms         0ms            2
+   P2         5ms         0ms            3
+   P3         5ms         1ms            1
+   P4         6ms         4ms            2
+
+
+2. Write pseudocode for the scheduling algorithms
+   above; for each, determine what the computational
+   complexity of adding a process to the ready queue,
+   of selecting the next process, and of removing
+   a process from the queue.
+
+3. For each scheduling algorithm above, determine (and
+   describe how) whether CPU-bound or I/O-bound processes
+   are favored.
+
+4. For each scheduling algorithm above, describe how
+   starvation can occur (or describe why it never will
+   occur).
+
+5. Given actual burst times for process P1 shown below
+   and an initial guess of 6ms, calculate the estimated
+   next burst time for P1 by using exponential averaging
+   with alpha (a) set to 1/2; recalculate with alpha set
+   to 1/4 and 3/4.
+
+   Measured burst times for P1: 12ms, 8ms, 8ms, 9ms, 4ms
+
+6. Describe what happens when a child process terminates;
+   also, what happens when a process with child processes
+   terminates?
+
+7. In a shell, how might the pipe functionality actually
+   be implemented?  Describe in detail.
+
+8. Why might fork() fail?  Why does a "fork-bomb" cause
+   a system to potentially crash?
+
+====================================================
+
+additional sample final exam questions follow...
+
+====================================================
+
+Synchronization:
+
+For each of the following synchronization problems,
+first describe how starvation can occur, then
+describe how deadlock can occur, then write pseudocode
+to solve the given synchronization problem (using the
+atomic P() and V() operations):
+
+a. Dining Philosophers Problem -- Five philosophers
+   sit down at a table with five chopsticks.  Each
+   philosopher either eats or thinks.  To eat, the
+   philosopher must pick up the chopsticks to the
+   left and to the right of where s/he sits; however,
+   each philosopher may only pick up one chopstick
+   at a time.  To think, the philosopher has no
+   chopsticks.
+
+b. Readers/Writers Problem -- Any number of reader
+   and writer processes are allowed.  Readers can
+   simultaneously read from the database.  Only one
+   writer can write to the database at any given time.
+   If a writer is writing, no readers can read while
+   the write occurs.
+
+====================================================
+
+Contiguous Memory Allocation:
+
+Consider a contiguous memory allocation scheme with
+dynamic partitioning for a 64MB physical memory with
+five pre-allocated processes (A, B, C, D, E) that
+happen to have memory requirements evenly divisible
+by 1MB.  Given the following new processes (F, G,
+and H) that arrive (almost) simultaneously in the
+order shown, show how memory allocation occurs for
+each of the placement algorithms below.
+
+If a process cannot be placed, be sure to state that
+(i.e. do not perform defragmentation).
+
+Arrival Order	ProcessID	Memory Requirement
+1	F	2,987,642 bytes
+2	G	4,002,016 bytes
+3	H	6,202,454 bytes
+
+a. First Fit
+Memory:
+AAAAAAAAA......B   (each char is 1MB)
+BBBBBB.....CCCCC
+CCCC...DDDDDDDDD
+DDDD.........EEE
+
+b. Best Fit
+Memory:
+AAAABBBBBBBBBBBB
+BBBBBBBB....CCCC
+CCCCC...DDDDDDDD
+DDDDDD.......EEE
+
+c. Next Fit (process D was last placed)
+Memory:
+AAAAAAAAAA.....B
+BBBBBBBB.....CCC
+CCCCCC...DDDDDDD
+DDDD........EEEE
+
+d. Worst Fit
+Memory:
+AAAAAAAAA......B
+BBBBBB.....CCCCC
+CCCC...DDDDDDDDD
+DDDD.........EEE
+
+
+What kind of fragmentation occurs (internal or external)?
+
+Overall, how much space is unused?
+
+====================================================
+
+Noncontiguous Memory Allocation:
+
+Consider a noncontiguous memory allocation scheme
+in which a logical memory address is represented
+using 32 bits.  Of these bits, the high-order
+12 bits represent the page number; the remaining
+bits represent the page offset.
+
+What is the total logical memory space
+(i.e. how many bytes are addressed)?
+
+How many pages are there?
+
+What is the page size?
+
+What is the frame size?
+
+How does logical memory address 23,942,519
+(binary 1011011010101010101110111) map to physical
+memory (i.e. what is the logical page number and
+page offset)?
+
+If a process requires 78,901,234 bytes of memory,
+how many pages will it require?
+
+How many bytes are unused due to external fragmentation?
+
+How many bytes are unused due to internal fragmentation?
+
+Given that the page table is stored entirely in
+memory and a memory reference takes 100 nanoseconds,
+how long does a paged memory reference take?
+
+Adding a translation look-aside buffer (TLB) with
+a TLB access time of 15 nanoseconds, how long does
+a paged memory reference take if a TLB hit occurs?
+
+Given a TLB hit ratio of 84%, what is the effective
+memory access time (EMAT)?
+
+====================================================
+
+Virtual Memory:
+
+Given a page reference string and an n-frame memory,
+how many page faults occur for the following page
+replacement algorithms:
+
+a. FIFO
+
+b. OPT
+
+c. LRU
+
+d. LFU
+
+e. Working Set with W = 3, W = 5, etc.
+
+====================================================
