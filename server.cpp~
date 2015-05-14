@@ -35,6 +35,7 @@
 #include "pagingSys.h"
 #include "fileSys.h"
 
+
 //FIx: sempahor on reads
 //FIX: buffer is const size, any file-contents larger than 1024 will get cutoff
 #define BUFFER_SIZE 1025
@@ -107,6 +108,14 @@ FileSystem* filesys;
 
 void sendClient(int socket, const char * str, int len){
   int numSent = send( socket, str, len, 0 );
+  fflush( NULL );
+  if ( numSent != len ){
+    perror( "send() failed" );
+  }
+}
+
+void sendContents(int socket, const char * str, int len){
+  int numSent = write( socket, str, len);
   fflush( NULL );
   if ( numSent != len ){
     perror( "send() failed" );
@@ -425,10 +434,29 @@ void * client_thread(void * arg){
 	  int startVal = 0;
 	  
 	  
+
+	  printf( "[thread %lu] Rcvd: READ %s %d %d\n", tid , query->argv[1] , offset, numRead);
+	      
+
 	  //std::vector<BYTE> output;
 
 
 	  //if file queued for deletion, spew ERROR: FILE QUEUED FOR DELETION\n to client
+	  
+	  File * fileP;
+	  int fileIndex = filesys->findFile(query->argv[1]);
+	  if(fileIndex != -1){  //file exists
+	    
+	    fileP = filesys->files[fileIndex];
+	    if(fileP->readAble == 0){  //can't read, queued for deletion
+	      sendClient(*(clientInfo->newsock),"ERROR: FILE QUEUED FOR DELETION\n",32);
+	      printf( "[thread %lu] Sent: ERROR: FILE QUEUED FOR DELETION\n", tid );
+	      delete flag;
+	      continue;
+	    }
+	    fileP->numReads++;  //can read
+	    
+	  }
 
 
 	  //use a counter here if you need to do +1 or something (maybe no counter maybe just if(currRead==0) dont add 1, else +1 -------- for startVal
@@ -450,11 +478,13 @@ void * client_thread(void * arg){
 	    
 	    if(*flag == 1){
 	      sendClient(*(clientInfo->newsock),"ERROR: NO SUCH FILE\n",20);
+	      printf( "[thread %lu] Sent: ERROR: NO SUCH FILE\n", tid);
 	      break;
 	    }
 	    //FIX: invalid byte range should be tested first wiht numbtes
 	    else if(*flag == 2){
 	      sendClient(*(clientInfo->newsock),"ERROR: INVALID BYTE RANGE\n",26);
+	      printf( "[thread %lu] Sent: ERROR: INVALID BYTE RANGE\n", tid);
 	      break;
 	    }
 	    
@@ -465,22 +495,6 @@ void * client_thread(void * arg){
 	    */
 	    currRead+=tmpVec.size();
 
-	    /*
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    std::cout<<"====================================================================="<<std::endl;
-	    */
 	   
 	    
 	    //printf("SIZE OF OUTPUT: %lu\n", output.size());
@@ -512,13 +526,16 @@ void * client_thread(void * arg){
 	      
 	    //ACK
 	    sendClient( *(clientInfo->newsock), firstOut, strlen(firstOut));
-	    printf( "[thread %lu]: Sent: ACK %lu\n", tid , tmpVec.size());
+	    printf( "[thread %lu] Sent: ACK %lu\n", tid , tmpVec.size());
 	  
 	      
 	    //file contents
-	    sendClient( *(clientInfo->newsock), clientOut, strlen(clientOut));
-	    printf( "[thread %lu]: Transferred %lu Bytes from offset %d\n", tid , tmpVec.size(), startVal);
+	    sendContents( *(clientInfo->newsock), clientOut, strlen(clientOut));
+	    printf( "[thread %lu] Transferred %lu Bytes from offset %d\n", tid , tmpVec.size(), startVal);
 	      
+	    
+	    fileP->numReads--;
+	    
 	    free(clientOut);
 	    
 	  }
@@ -543,6 +560,9 @@ void * client_thread(void * arg){
 	  
 	  //filesys->print();
 	  
+
+	  
+
 	  //printf("end debug print\n");
 	  query->argv[1][strlen(query->argv[1])-1] = '\0';  //get rid of \n
 	  //printf("delete2\n");
@@ -556,8 +576,12 @@ void * client_thread(void * arg){
 	    sendClient( *(clientInfo->newsock), "ERROR: NO SUCH FILE\n",20);
 	    printf( "[thread %lu] Sent: ERROR: NO SUCH FILE\n", tid);
 	  }
-	  else{
-	    //how well does it work with bum filename?
+	  else{  //found file
+	    
+	    //set file to be deleted
+
+	    //wait for reads to finish
+	    
 	    paging->delete_file(std::string(query->argv[1]));
 	    printf( "[thread %lu] Deleted %s file\n", tid , query->argv[1]);
 	    sendClient( *(clientInfo->newsock), "ACK\n",4);
@@ -713,6 +737,7 @@ int main()
   
   filesys = new FileSystem;  //must be after init_server (init adds files to server)
 
+ 
   //printf("testa\n");
 
   /* Create the listener socket as TCP (SOCK_STREAM) socket */

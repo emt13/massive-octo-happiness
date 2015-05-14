@@ -1,25 +1,6 @@
 /* server.c */
 //Names: Evan Thompson, John Cusick, Tausif Ahmed   
 
-/*NOTES:
-  -12 byte buffer: handles 11 with the enter, 10 with enter and EOS
-  -filenames have no spaces
-  -weird thing: a lot of output when client exited out (not properly closed)
-    --exit out of terminal rather than control C
- */
-
-
-/*TODO
--send function
--string to char* function + \n
--int to char* function + \n  
--STORE
--READ
--DELETE
-*/
-
-
-
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -35,8 +16,7 @@
 #include "pagingSys.h"
 #include "fileSys.h"
 
-//FIx: sempahor on reads
-//FIX: buffer is const size, any file-contents larger than 1024 will get cutoff
+
 #define BUFFER_SIZE 1025
 
 #define PORT_NUM 8765
@@ -51,11 +31,14 @@ typedef unsigned char BYTE;
 
 #define MAX_ARG 100
 
+
+//passed to each client thread
 struct clientArg{
   struct sockaddr_in * client;
   int *newsock; 
 };
 
+//used to parse a query
 struct queryType{
   char ** argv;
   int argc;
@@ -91,7 +74,7 @@ pthread_mutex_t storeMutex = PTHREAD_MUTEX_INITIALIZER;  //for new clients
 //holds all Thread IDs
 pthread_t * tids; 
 
-//the paging?
+//the paging
 PagingSystem* paging;
 
 int sock;
@@ -105,6 +88,8 @@ FileSystem* filesys;
 
 
 
+
+//send command to send message
 void sendClient(int socket, const char * str, int len){
   int numSent = send( socket, str, len, 0 );
   fflush( NULL );
@@ -113,6 +98,8 @@ void sendClient(int socket, const char * str, int len){
   }
 }
 
+
+//send command to send binary bytes
 void sendContents(int socket, const char * str, int len){
   int numSent = write( socket, str, len);
   fflush( NULL );
@@ -122,8 +109,7 @@ void sendContents(int socket, const char * str, int len){
 }
 
 
-
-
+//number of digits
 int numDig(unsigned int x){
   int length = 1;
   while ( x /= 10 ){
@@ -133,14 +119,6 @@ int numDig(unsigned int x){
 }
 
 
-
-
-
-
-//Thread functions go in this section                                                               
-//-------------- THREAD ----------------                                                            
-
-
 /*
   Parse server queries into argv/argc data type
   Return Value: 0 = success, 1 = unknown command
@@ -148,22 +126,19 @@ int numDig(unsigned int x){
 
 //could add test to make sure don't read in MAX_ARG arguments, but unneccesary
 int parseQuery(char *comm, struct queryType * query){
-  //to be deleted in client_thread
-  query->argc = 0;
-  
-  //  printf("COMM: %s\n",comm);
+  query->argc = 0;  
 
+  //tokenize by spaces
   char * tmp = strtok(comm, " ");
   int counter = 0;
   
-  //printf("tmp: %s\n",tmp);
-  
+  //look at first token for a command
   if(tmp == NULL){
     printf("TEMP IS NULL\n");
     return 1; //should not be the case but for safety
   }
 
-  if(strcmp(tmp,"\n")==0){ // no input
+  if(strcmp(tmp,"\n")==0){ // no input --ignore 
     return -1;
   }
 
@@ -190,85 +165,23 @@ int parseQuery(char *comm, struct queryType * query){
     return 1;
   }
 
+  //set argv data type for correct commands
   while(tmp!=NULL){
     query->argv[counter] = tmp;
     query->argc++;
     tmp = strtok(NULL, " ");
     counter++;
-    /*
-    if(counter == 3){
-      break;
-    }
-    */
   }
   
   return 0; //success
 }
 
 
-//Note: doesn't recognize STORE w/out arguments (due to \n)
-//------------------------------------------------
 
+//================================================================================
+//===============================CLIENT THREAD====================================
+//================================================================================
 
-
-
-//sets up the server and gets everything ready to start up, also sets up the paging system          
-void init_server(){
-
-  //paging system init                                                                              
-  paging = new PagingSystem(NUM_FRAMES, SIZE_FRAMES, FRAMES_PER_FILE);
-
-  /*
-  paging->print_stats();
-
-  
-  std::vector<BYTE> file_input;
-  file_input.push_back((unsigned char) *("A"));
-  file_input.push_back((unsigned char) *("B"));
-  file_input.push_back((unsigned char) *("C"));
-  file_input.push_back((unsigned char) *("\n"));
-  file_input.push_back((unsigned char) *("N"));
-  file_input.push_back((unsigned char) *("-"));
-  file_input.push_back((unsigned char) *("\n"));
-  file_input.push_back((unsigned char) *("j"));
-
-  int rc = paging->store(std::string("test-store.txt"), file_input);
-  printf("store returned: %d\n", rc);
-  std::cout<<"stored file"<<std::endl;
-
-  std::vector<std::string> all_files = paging->dir();
-  for(unsigned int i = 0; i < all_files.size(); i++){
-    std::cout<<" - "<< all_files[i]<<std::endl;
-  }
-
-  printf("DONE WITH SERVER INIT\n");
-
-  */
-  //server init                                                                                     
-
-
-}
-
-
-
-//start listening for connections and then starts up threads to handle the commands issued          
-void start_listening(){
-  //STORE, DELETE, READ, DIR                                                                        
-
-}
-
-
-
-
-
-
-
-
-
-//big problem with allocation and deallocation here
-
-
-//WARNING: ANY COMMAND WORDS IN FILE CONTENTS ARE STILL FILE CONTENTS
 
 void * client_thread(void * arg){
   struct clientArg * clientInfo = (struct clientArg *) arg;
@@ -288,16 +201,13 @@ void * client_thread(void * arg){
   struct queryType * query = new struct queryType; 
   query->argv = new char *[MAX_ARG];
   
-  
+  //keep recving while the client is up
   do{
-    //printf( "[thread %lu]: Blocked on recv()\n", tid );
     
-    /* can also use read() and write()..... */
-    
-    if(command == 1){
+    if(command == 1){  //if expecting a command
       n = recv( *(clientInfo->newsock), buffer, BUFFER_SIZE, 0 );
     }
-    else{
+    else{  //if expecting file contents (after STORE)  use read for byte
       n = read( *(clientInfo->newsock), tmpBig, numBytes );
     }
     
@@ -306,15 +216,14 @@ void * client_thread(void * arg){
     }
     else if ( n == 0 ){
       //socket closed!
-      //printf( "[thread %lu]: Rcvd 0 from recv(); closing socket\n", tid );
     }
     else{
+      
+      //--------------------------------------------SOME TYPE OF DATA RECEIVED----------------------------------------------
 
       int rc = 1;
       if(command == 1){  //parse the command
 	buffer[n] = '\0';  /* assuming text.... */
-	//printf( "[thread %lu]: Rcvd message from %s: %s\n",tid,inet_ntoa( (struct in_addr)clientInfo->client->sin_addr) ,buffer );
-	
 	rc = parseQuery(buffer,query);
       }
 
@@ -322,6 +231,7 @@ void * client_thread(void * arg){
 	continue;
       }
 
+      //----------------------------NOT A KNOWN COMMAND-----------------------------------
       if(rc == 1 && command == 1){
 	//no command and expecting command
 	char * comm = strtok(buffer, " ");
@@ -336,9 +246,18 @@ void * client_thread(void * arg){
 	  perror( "send() failed" );
 	}
       }
+
+
+      
+      //================================================================================
+      //===============================FILE-CONTENTS====================================
+      //================================================================================
+
+
       if(rc == 1 && command == 0){  //2nd part of store
 	//was expecting file contents
-	//printf( "[thread %lu] file contents: %s\n", tid,tmpBig);
+
+
 	if(currBytes == 0){
 	  strncpy(bigBuff, tmpBig, numBytes);
 	}
@@ -346,8 +265,7 @@ void * client_thread(void * arg){
 	  strncat(bigBuff, tmpBig,numBytes-currBytes);
 	}
 	currBytes+=n;  //n set by recv, numBytes received
-	
-	
+		
 	if(currBytes == numBytes){  //ready to store, go ahead and lock
 	  pthread_mutex_lock( &storeMutex );    /*   P(mutex)  */
 	  //CRITICAL SECTION: storing
@@ -373,12 +291,10 @@ void * client_thread(void * arg){
 	  command = 1;
 	  
 	  if(rc == -1){  //file already existed,  SORRY CHAP
-	    //printf("FILE ALREADY EXISTED\n");
 	    printf( "[thread %lu] Sent: ERROR: FILE EXISTS\n",tid);
 	    sendClient(*(clientInfo->newsock),"ERROR: FILE EXISTS\n",19);
-	    
 	  }
-	  else{
+	  else{  //was able to store the file!
 	    printf( "[thread %lu] Transferred file (%d bytes)\n",tid, numBytes);
 	    printf( "[thread %lu] Sent: ACK\n",tid);
 	    sendClient(*(clientInfo->newsock),"ACK\n", 4);
@@ -386,18 +302,13 @@ void * client_thread(void * arg){
 	}
       }
       if(rc == 0){ //got a command
-	//debug print
-	/*
-	printf("argc: %d\n",query->argc);
-	printf("type: %d\n",query->type);
-	for(int i = 0; i < query->argc; i++){
-	  printf("argv[%d]: %s\n", i, query->argv[i]);
-	}
-	*/
-
-
+	
+	//================================================================================
+	//===============================STORE============================================
+	//================================================================================	
+	
 	if(query->type == 1){  //store
-	    
+	  
 	  numBytes = atoi(query->argv[2]);
 	  command = 0;
 	  bigBuff = (char *) calloc(numBytes, sizeof(char));
@@ -410,6 +321,11 @@ void * client_thread(void * arg){
 	  
 
 	}
+
+
+	//================================================================================
+	//===============================READ=============================================
+	//================================================================================
 
 
 	else if(query->type == 2){  //read
@@ -432,12 +348,30 @@ void * client_thread(void * arg){
 
 	  int startVal = 0;
 	  
+	
+
+
+	  printf( "[thread %lu] Rcvd: READ %s %d %d\n", tid , query->argv[1] , offset, numRead);
+	      
+
+
+	  //if file queued for deletion
+	  File * fileP;
+	  int fileIndex = filesys->findFile(query->argv[1]);
+	  if(fileIndex != -1){  //file exists
+	    
+	    fileP = filesys->files[fileIndex];
+	    if(fileP->readAble == 0){  //can't read, queued for deletion
+	      sendClient(*(clientInfo->newsock),"ERROR: FILE QUEUED FOR DELETION\n",32);
+	      printf( "[thread %lu] Sent: ERROR: FILE QUEUED FOR DELETION\n", tid );
+	      delete flag;
+	      continue;
+	    }
+	    fileP->numReads++;  //can read
+	    
+	  }
+
 	  
-	  //std::vector<BYTE> output;
-
-
-	  //if file queued for deletion, spew ERROR: FILE QUEUED FOR DELETION\n to client
-
 
 	  //use a counter here if you need to do +1 or something (maybe no counter maybe just if(currRead==0) dont add 1, else +1 -------- for startVal
 	  while(currRead != numRead){
@@ -458,11 +392,13 @@ void * client_thread(void * arg){
 	    
 	    if(*flag == 1){
 	      sendClient(*(clientInfo->newsock),"ERROR: NO SUCH FILE\n",20);
+	      printf( "[thread %lu] Sent: ERROR: NO SUCH FILE\n", tid);
 	      break;
 	    }
-	    //FIX: invalid byte range should be tested first wiht numbtes
+	    
 	    else if(*flag == 2){
 	      sendClient(*(clientInfo->newsock),"ERROR: INVALID BYTE RANGE\n",26);
+	      printf( "[thread %lu] Sent: ERROR: INVALID BYTE RANGE\n", tid);
 	      break;
 	    }
 	    
@@ -504,22 +440,21 @@ void * client_thread(void * arg){
 	      
 	    //ACK
 	    sendClient( *(clientInfo->newsock), firstOut, strlen(firstOut));
-	    printf( "[thread %lu]: Sent: ACK %lu\n", tid , tmpVec.size());
+	    printf( "[thread %lu] Sent: ACK %lu\n", tid , tmpVec.size());
 	  
 	      
 	    //file contents
 	    sendContents( *(clientInfo->newsock), clientOut, strlen(clientOut));
-	    printf( "[thread %lu]: Transferred %lu Bytes from offset %d\n", tid , tmpVec.size(), startVal);
+	    printf( "[thread %lu] Transferred %lu Bytes from offset %d\n", tid , tmpVec.size(), startVal);
 	      
+	    
+	    fileP->numReads--;
+	    
 	    free(clientOut);
 	    
 	  }
 	  
 	  
-	  //TODO: send bytes to client..........
-	  
-	  
-
 	
 	  
 
@@ -529,12 +464,16 @@ void * client_thread(void * arg){
 
 	}
 
+	//===========================================================
+	//=========================DELETE============================
+	//===========================================================
 
 	else if(query->type == 3){  //delete command, some synchronization required
 	  //printf("start delete\n");
 	  
 	  //filesys->print();
 	  
+
 	  //printf("end debug print\n");
 	  query->argv[1][strlen(query->argv[1])-1] = '\0';  //get rid of \n
 	  //printf("delete2\n");
@@ -548,8 +487,12 @@ void * client_thread(void * arg){
 	    sendClient( *(clientInfo->newsock), "ERROR: NO SUCH FILE\n",20);
 	    printf( "[thread %lu] Sent: ERROR: NO SUCH FILE\n", tid);
 	  }
-	  else{
-	    //how well does it work with bum filename?
+	  else{  //found file
+	    
+	    //set file to be deleted
+
+	    //wait for reads to finish
+	    
 	    paging->delete_file(std::string(query->argv[1]));
 	    printf( "[thread %lu] Deleted %s file\n", tid , query->argv[1]);
 	    sendClient( *(clientInfo->newsock), "ACK\n",4);
@@ -557,6 +500,13 @@ void * client_thread(void * arg){
 	    
 	  }
 	}
+
+
+
+	//================================================================================
+	//=========================================DIR====================================
+	//================================================================================
+
 
 
 	else if(query->type == 4){  //dir command, no synchronization required
@@ -624,29 +574,13 @@ void * client_thread(void * arg){
 
 	  printf( "[thread %lu] Sent: ACK & %lu file names\n",tid , file_names.size());
 	  
-	  /*
-
-	        //ACK
-
-      
-	  n = send( *(clientInfo->newsock), "ACK\n", 4, 0 );
-	  fflush( NULL );
-	  if ( n != 4 ){
-	    perror( "send() failed" );
-	  }
-	  
-*/
-
+	
 	}
 
 
 	
       }
-      //FIX: IF MORE THAN ONE COMMAND IN A QUERY, SPLIT ON \n AND LOOP THROUGH
-
-	
-      /* send ack message back to the client */
-
+      
       
     }
   }while ( n > 0 );
@@ -671,30 +605,23 @@ void * client_thread(void * arg){
 
 
 
-/*
-void * exitThread(void *){
-  while(1){
-    std::string exitStr;
-    std::cin>>exitStr;
-    if(exitStr.compare("quit")==0 || exitStr.compare("exit")==0){
-      break;
-    }
-  }
-  close( sock );
-  delete paging;
-  delete [] tids;
-  return EXIT_SUCCESS;
-}
-*/
+
+
+//================================================================
+//=============================MAIN===============================
+//================================================================
+
+
 
 
 
 
 int main()
 {
-  //std::cout<<"Hello World!"<<std::endl;
   
-  init_server();
+  //paging system init                                                                              
+  paging = new PagingSystem(NUM_FRAMES, SIZE_FRAMES, FRAMES_PER_FILE);
+
 
   //keep track of pids
   
@@ -705,6 +632,7 @@ int main()
   
   filesys = new FileSystem;  //must be after init_server (init adds files to server)
 
+ 
   //printf("testa\n");
 
   /* Create the listener socket as TCP (SOCK_STREAM) socket */
