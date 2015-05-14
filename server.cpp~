@@ -400,7 +400,7 @@ void * client_thread(void * arg){
 	  int startVal = 0;
 	  
 	  
-	  std::vector<BYTE> output;
+	  //std::vector<BYTE> output;
 
 
 	  //if file queued for deletion, spew ERROR: FILE QUEUED FOR DELETION\n to client
@@ -427,21 +427,22 @@ void * client_thread(void * arg){
 	    
 	    if(*flag == 1){
 	      sendClient(*(clientInfo->newsock),"ERROR: NO SUCH FILE\n",20);
-	      send = 0;
 	      break;
 	    }
+	    //FIX: invalid byte range should be tested first wiht numbtes
 	    else if(*flag == 2){
 	      sendClient(*(clientInfo->newsock),"ERROR: INVALID BYTE RANGE\n",26);
-	      send = 0;
 	      break;
 	    }
 	    
-	    for(int i = 0; i < tmpVec.size(); i++){
+	    /*
+	    for(unsigned int i = 0; i < tmpVec.size(); i++){
 	      output.push_back(tmpVec[i]);
 	    } 
-	    
+	    */
 	    currRead+=tmpVec.size();
 
+	    /*
 	    std::cout<<"====================================================================="<<std::endl;
 	    std::cout<<"====================================================================="<<std::endl;
 	    std::cout<<"====================================================================="<<std::endl;
@@ -456,53 +457,55 @@ void * client_thread(void * arg){
 	    std::cout<<"====================================================================="<<std::endl;
 	    std::cout<<"====================================================================="<<std::endl;
 	    std::cout<<"====================================================================="<<std::endl;
-
+	    */
 	   
-	    printf( "[thread %lu]: Sent: ACK %d\n", tid , tempVec.size());
 	    
-	    //TODO: send bytes to client..........
-
-	    printf( "[thread %lu]: Transferred %d Bytes from offset %d\n", tid , tempVec.size(), startVal);
+	    //printf("SIZE OF OUTPUT: %lu\n", output.size());
+	    //printf("numREAD: %d\n", numRead);
 	    
-	  }
-
-	  if(send == 1){
-	    printf("SIZE OF OUTPUT: %lu\n", output.size());
-	    printf("numREAD: %d\n", numRead);
-	    
-	    char * clientOut = (char * )calloc(output.size(), sizeof(char));
-	    for(int i = 0; i  < output.size(); i++){
-	      clientOut[i] = (char) output[i];
-	      std::cout<<"output["<<i<<"] = "<<output[i]<<std::endl;
+	    char * clientOut = (char * )calloc(tmpVec.size(), sizeof(char));
+	      
+	    for(unsigned int i = 0; i  < tmpVec.size(); i++){
+	      clientOut[i] = (char) tmpVec[i];
+	      //std::cout<<"output["<<i<<"] = "<<output[i]<<std::endl;
 	    }
 	    
 	    
 	    
 	    //convert number to char*
 	    std::stringstream strs;
-	    strs << output.size();
+	    strs << tmpVec.size();
 	    std::string temp_str = strs.str();
 	    const char* numOut = (char*) temp_str.c_str();
 	    
 	    //int numDigits = numDig(file_names.size());  //find number of digits
-
 	    
-	    char firstOut[strlen(numOut) + 5];  //5: ack\n space
+	    
+	    char firstOut[strlen(numOut) + 5];  //5: ack \n
 	    
 	    strcpy(firstOut,"ACK ");
 	    strcat(firstOut, numOut);
 	    strcat(firstOut,"\n");
-
+	      
 	    //ACK
 	    sendClient( *(clientInfo->newsock), firstOut, strlen(firstOut));
-	    
-	    
+	    printf( "[thread %lu]: Sent: ACK %lu\n", tid , tmpVec.size());
+	  
+	      
 	    //file contents
 	    sendClient( *(clientInfo->newsock), clientOut, strlen(clientOut));
+	    printf( "[thread %lu]: Transferred %lu Bytes from offset %d\n", tid , tmpVec.size(), startVal);
+	      
+	    free(clientOut);
 	    
-
-
 	  }
+	  
+	  
+	  //TODO: send bytes to client..........
+	  
+	  
+
+	
 	  
 
 	  delete flag;
