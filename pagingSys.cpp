@@ -128,6 +128,7 @@ int PagingSystem::delete_file(std::string file_name){
 		std::map<std::string, std::vector<int> >::iterator itr = page_table.find(file_name);
 		for(unsigned int i = 0; i < itr->second.size(); i++){
 			frames[itr->second[i]].purge();
+			printf("[thread %lu] deallocated frame %d\n", (unsigned long) pthread_self(), itr->second[i]);
 		}
 
 		page_table.erase(file_name);
@@ -162,7 +163,7 @@ int PagingSystem::get_LRU(std::string file_name){
 		int oldest = 0;
 		for(unsigned int i = 1; i < frames.size(); i++){
 		//	printf("L: %d | R: %d   = %d\n", frames[i].get_time_stamp(), frames[oldest].get_time_stamp(), frames[i].older(frames[oldest]));
-			if(frames[i].older(frames[oldest]) || frames[i].get_time_stamp() == 0){
+			if(frames[i].get_time_stamp() < frames[oldest].get_time_stamp() || frames[i].get_time_stamp() == 0){
 				oldest = i;
 			}
 		}	
