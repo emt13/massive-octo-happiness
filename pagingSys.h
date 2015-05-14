@@ -48,8 +48,6 @@ class PagingSystem{
 		std::map<std::string, std::vector<int> > page_table;
 
 		//Functions
-		long get_file_size(std::string file_path);
-		bool file_exists(std::string file_path);
 
 		int get_LRU(std::string file_name);
 
@@ -70,6 +68,10 @@ class PagingSystem{
 		int get_num_frames(){ return num_frames; }
 		int get_size_frames(){ return size_frames; }
 		int get_max_frames_per_file(){ return frames_per_file; }
+
+		long get_file_size(std::string file_path);
+	
+		bool file_exists(std::string file_path);
 
 		//reads a page into the frames and then returns what it wants
 		std::vector<BYTE> read_page(std::string file_name, int offset, int amount, int* flag);
