@@ -16,6 +16,7 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #include "frame.h"
+#include <pthread.h>
 
 #define STORAGE_STR ".storage"
 #define DIR_PERMISSIONS 0777

@@ -27,7 +27,7 @@ void PagingSystem::init_frames(){
 	//Frame::num_reads = 0;
 
 	//setup vectors for each frame.  Could use arrays possibly since they won't resize
-	for(unsigned int i = 0; i < num_frames; i++){
+	for(int i = 0; i < num_frames; i++){
 		//BYTE tmp_byte = 0;
 		//std::vector<BYTE> tmp_vec(tmp_byte, size_frames);
 		//files.push_back(tmp_vec);
@@ -84,8 +84,9 @@ int PagingSystem::store(std::string file_name, std::vector<BYTE> data){
 	//file doesn't exist
 	if(rc != 0){
 		int fd = open(file_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_EXCL, DIR_PERMISSIONS);
-		std::cout<<"got fd - "<<fd<<std::endl;
-		if(fd == -1){ std::cout<<"!!! ERRNO: "<<errno<<std::endl; }
+	//	std::cout<<"got fd - "<<fd<<std::endl;
+		//if(fd == -1){ std::cout<<"!!! ERRNO: "<<errno<<std::endl; }
+		if(fd == -1) return fd;
 		int total = 0;
 		for(unsigned int i = 0; i < data.size(); i++){
 			BYTE arr[1] = {data[i]};
@@ -147,7 +148,7 @@ int PagingSystem::get_LRU(std::string file_name){
 
 	std::map<std::string, std::vector<int> >::iterator itr = page_table.find(file_name);
 	//if file is already maxed out on frames, use its oldest (index 0)
-	if(itr->second.size() == frames_per_file){
+	if(itr->second.size() == (size_t)frames_per_file){
 		//printf("maxed out on frames! %s\n", file_name.c_str());
 		int oldest = 0;
 		for(unsigned int i = 1; i < itr->second.size(); i++){
@@ -198,7 +199,7 @@ void PagingSystem::store_file_data(std::string file_path, std::string file_name,
 	lseek(fd, (page_num) * size_frames, SEEK_SET);
 	BYTE file_data[size_frames];
 
-	for(unsigned int i = 0; i < size_frames; i++){
+	for(int i = 0; i < size_frames; i++){
 		file_data[i] = (BYTE) 0;
 	}
 
@@ -210,7 +211,7 @@ void PagingSystem::store_file_data(std::string file_path, std::string file_name,
 
 	std::vector<BYTE> byte_vec(size_frames, (BYTE) 0);
 
-	for(unsigned int i = 0; i < size_frames; i++){
+	for(int i = 0; i < size_frames; i++){
 		//printf("%c", (char) file_data[i]);
 		byte_vec[i] = file_data[i];
 	}
@@ -282,6 +283,13 @@ std::vector<BYTE> PagingSystem::read_page(std::string file_name, int offset, int
 	//get the next available frame to replace according to LRU
 	int frame_to_replace = get_LRU(file_name);
 
+	if(frames[frame_to_replace].owner() != ""){
+		printf("[thread %lu] Allocated page %d to frame %d (replacing page %d from %s)\n", (unsigned long)pthread_self(), page_num+1, frame_to_replace, frames[frame_to_replace].get_page_num(), frames[frame_to_replace].owner().c_str());
+	}else{
+		printf("[thread %lu] Allocated page %d to frame %d\n", (unsigned long)pthread_self(), page_num+1, frame_to_replace);
+	
+	}
+	
 	//printf("replacing frame: %d\n", frame_to_replace);
 
 	//remove the frame number from that entry
@@ -298,13 +306,14 @@ std::vector<BYTE> PagingSystem::read_page(std::string file_name, int offset, int
 
 	//printf("stored file data\n");
 
-	printf("Allocated page %d to frame %d\n", page_num+1, frame_to_replace);
 
 	//display server output	
 	*flag = SUCCESS_READ;
 	//pull the information from the frame, return it
 	return frames[frame_to_replace].get_data(offset, amount);
 }
+
+
 
 
 
