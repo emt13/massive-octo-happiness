@@ -15,5 +15,33 @@ public class client_java {
 		 *
 		 * 
 		 */
+		String file_name = getFileName();
+		ArrayList<String> commands = loadFile(file_name);
+		for (int i = 0; i < commands.size(); i++) {
+			System.out.println(commands.get(i));
+		}
+		
 	}
+
+	public static String getFileName() {
+		Scanner reader = new Scanner(System.in);
+		System.out.print("Please provide a local test file: ");
+		String file_name = reader.nextLine();
+		return file_name;
+	}
+
+	public static ArrayList<String> loadFile(String file_name) {
+		File file = new File(file_name);
+		try {
+			Scanner reader = new Scanner(file);
+			ArrayList<String> commands = new ArrayList<String>();
+			while (reader.hasNextLine()) {
+				String line = reader.nextLine();
+				System.out.println(line);
+				commands.add(line);
+			}
+		} catch (FileNotFoundException e) {}
+		return commands;
+	}
+
 }	
