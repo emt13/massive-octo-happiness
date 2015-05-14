@@ -20,7 +20,6 @@
 #define PORT_NUM 8765
 #define HOST "74.74.74.74"
 
-
 void loadFile(std::vector<std::string> *commands) {
 	std::string file_name = "", line = "";
 	std::cout << "Please provide a local test file: ";
