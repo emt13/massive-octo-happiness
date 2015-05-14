@@ -172,6 +172,9 @@ int parseQuery(char *comm, struct queryType * query){
     tmp = strtok(NULL, " ");
     counter++;
   }
+
+
+  //std::cout<<"argc: "<<query->argc<<std::endl;
   
   return 0; //success
 }
@@ -306,9 +309,16 @@ void * client_thread(void * arg){
 	//================================================================================
 	//===============================STORE============================================
 	//================================================================================	
-	
+       
 	if(query->type == 1){  //store
-	  
+	
+	  if(query->argc != 3){
+	    printf( "[thread %lu] Rcvd: STORE with %d commands\n",tid, query->argc);
+	    printf( "[thread %lu] Sent: ERROR: INCORRECT ARGUMENTS\n",tid);
+	    sendClient(*(clientInfo->newsock),"ERROR: INCORRECT ARGUMENTS",27);
+	    continue;
+	  }
+  
 	  numBytes = atoi(query->argv[2]);
 	  command = 0;
 	  bigBuff = (char *) calloc(numBytes, sizeof(char));
@@ -331,7 +341,15 @@ void * client_thread(void * arg){
 	else if(query->type == 2){  //read
 	  //pthread_mutex_lock( &RDMutex );    /*   P(mutex)  */
 	  //CRITICAL SECTION: read & delete
-	  
+
+	  if(query->argc != 4){
+	    printf( "[thread %lu] Rcvd: READ with %d commands\n",tid, query->argc);
+	    printf( "[thread %lu] Sent: ERROR: INCORRECT ARGUMENTS\n",tid);
+	    sendClient(*(clientInfo->newsock),"ERROR: INCORRECT ARGUMENTS\n",27);
+	    continue;
+	  }
+
+
 	  int offset = atoi(query->argv[2]);
 	  int numRead = atoi(query->argv[3]);
 	  
@@ -358,6 +376,7 @@ void * client_thread(void * arg){
 	  //if file queued for deletion
 	  File * fileP;
 	  int fileIndex = filesys->findFile(query->argv[1]);
+	  printf("Done with find\n");
 	  if(fileIndex != -1){  //file exists
 	    
 	    fileP = filesys->files[fileIndex];
@@ -446,7 +465,7 @@ void * client_thread(void * arg){
 	  
 	      
 	    //file contents
-	    sendContents( *(clientInfo->newsock), clientOut, strlen(clientOut));
+	    sendContents( *(clientInfo->newsock), clientOut, tempVec.size());
 	    printf( "[thread %lu] Transferred %lu Bytes from offset %d\n", tid , tmpVec.size(), startVal);
 	      
 	    
@@ -473,6 +492,16 @@ void * client_thread(void * arg){
 	//===========================================================
 
 	else if(query->type == 3){  //delete command, some synchronization required
+
+
+	  if(query->argc != 2){
+	    printf( "[thread %lu] Rcvd: DELETE with %d commands\n",tid, query->argc);
+	    printf( "[thread %lu] Sent: ERROR: INCORRECT ARGUMENTS\n",tid);
+	    sendClient(*(clientInfo->newsock),"ERROR: INCORRECT ARGUMENTS\n",27);
+	    continue;
+	  }
+
+
 	  //printf("start delete\n");
 	  
 	  //filesys->print();
@@ -514,6 +543,16 @@ void * client_thread(void * arg){
 
 
 	else if(query->type == 4){  //dir command, no synchronization required
+
+	  //CHECKED IN PARSE
+	  /*
+	  if(query->argc != 3){
+	    printf( "[thread %lu] Rcvd: DIR with %d commands\n",tid, query->argc);
+	    printf( "[thread %lu] Sent: ERROR: INCORRECT ARGUMENTS\n",tid);
+	    sendClient(*(clientInfo->newsock),"ERROR: INCORRECT ARGUMENTS\n",27);
+	    continue;
+	  }
+	  */
 
 	  file_names = paging->dir();
 	  //no need for 0 files check, this line is generalized
