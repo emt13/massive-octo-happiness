@@ -270,8 +270,8 @@ void * client_thread(void * arg){
 
 	
 	//debug print
-	for(int i = 0; i < storeInput.size(); i++){
-	  printf("storeInput[%d]: %c\n",i,(char)storeInput[i]);
+	for(unsigned int i = 0; i < storeInput.size(); i++){
+	  printf("storeInput[%u]: %c\n",i,(char)storeInput[i]);
 	}
 
 

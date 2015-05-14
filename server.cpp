@@ -270,10 +270,11 @@ void * client_thread(void * arg){
 
 	
 	//debug print
+	/*
 	for(unsigned int i = 0; i < storeInput.size(); i++){
 	  printf("storeInput[%u]: %c\n",i,(char)storeInput[i]);
 	}
-
+	*/
 
 	/*
 	if(currBytes == 0){
