@@ -75,7 +75,7 @@ int PagingSystem::store(std::string file_name, std::vector<BYTE> data){
 std::vector<std::string> PagingSystem::dir(){
 	
 	std::vector<std::string> file_names;
-
+	//open the directory and return all of the files
 	DIR *dir;
 	struct dirent *dp;
 	if((dir = opendir(STORAGE_STR)) != NULL){
@@ -89,8 +89,6 @@ std::vector<std::string> PagingSystem::dir(){
 	}
 
 	return file_names;
-
-
 }
 
 
@@ -122,14 +120,16 @@ int PagingSystem::get_LRU(std::string file_name){
 	std::map<std::string, std::vector<int> >::iterator itr = page_table.find(file_name);
 	//if file is already maxed out on frames, use its oldest (index 0)
 	if(itr->second.size() == (size_t)frames_per_file){
+		//find the oldest frame
 		int oldest = 0;
 		for(unsigned int i = 1; i < itr->second.size(); i++){
-			if(frames[itr->second[i]].older(frames[oldest])){
+			if(/*frames[itr->second[i]].older(frames[oldest])*/ frames[itr->second[i]].get_time_stamp() < frames[oldest].get_time_stamp()){
 				oldest = i;
 			}
 		}
 		return itr->second[oldest];
 	}else{
+		//find the oldest frame
 		int oldest = 0;
 		for(unsigned int i = 1; i < frames.size(); i++){
 			if(frames[i].get_time_stamp() < frames[oldest].get_time_stamp() || frames[i].get_time_stamp() == 0){
@@ -140,6 +140,7 @@ int PagingSystem::get_LRU(std::string file_name){
 	}
 }
 
+//removes a frame number from the page table for that file
 void PagingSystem::remove_frame_num_from_page(int frame_to_replace){
 	std::string file_name = frames[frame_to_replace].owner();
 	if(page_table.count(file_name) == 0){ return; }
@@ -152,6 +153,7 @@ void PagingSystem::remove_frame_num_from_page(int frame_to_replace){
 		}
 	}
 }
+
 
 void PagingSystem::add_frame_num_to_page(std::string file_name, int frame_num){
 	page_table.find(file_name)->second.push_back(frame_num);
