@@ -99,23 +99,23 @@ class FileSystem{
   //could implement waiting for reads to finish here... but probably better in server
   //0: success, 1: failure
   int removeFile(char * name){
-    printf("removeFile--finding file\n");
+    //printf("removeFile--finding file\n");
     int index = findFile(name);
-    printf("found file!: index = %d\n",index);
+    //printf("found file!: index = %d\n",index);
     if(index == -1){
-            return 1;
+      return 1;
+    }
+    
+    files[index]->readable = 0;  //stop new files from reading (avoid starvation)
+
+    while(files[index]->numReads > 0){
+      //wait for reads to finish
     }
 
-    pthread_mutex_lock( &RDMutex );    /*   P(mutex)  */
-    //CRITICAL SECTION: read & delete
-    
     delete files[index];
     files.erase(files.begin()+index);
 
-    //END CRITICAL SECTION
-    pthread_mutex_unlock( &RDMutex );  /*   V(mutex)  */
     
-
     return 0;
   }
 

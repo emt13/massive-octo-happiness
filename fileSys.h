@@ -103,19 +103,19 @@ class FileSystem{
     int index = findFile(name);
     //printf("found file!: index = %d\n",index);
     if(index == -1){
-            return 1;
+      return 1;
+    }
+    
+    files[index]->readAble = 0;  //stop new files from reading (avoid starvation)
+
+    while(files[index]->numReads > 0){
+      //wait for reads to finish
     }
 
-    pthread_mutex_lock( &RDMutex );    /*   P(mutex)  */
-    //CRITICAL SECTION: read & delete
-    
     delete files[index];
     files.erase(files.begin()+index);
 
-    //END CRITICAL SECTION
-    pthread_mutex_unlock( &RDMutex );  /*   V(mutex)  */
     
-
     return 0;
   }
 

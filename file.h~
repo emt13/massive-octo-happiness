@@ -26,6 +26,7 @@ class File{
     //file_size = fileSize;
     storing = 1;  //if you make a new file, should automatically be storing
     numReads = 0; //just made file, no one reading
+    readAble = 1;
   }
 
   ~File(){
@@ -38,6 +39,8 @@ class File{
   //int file_size;  //leaving out for now
   int numReads;
   bool storing;
+  bool readAble;
+
 
   //filesystem files
   std::vector<File> files;
