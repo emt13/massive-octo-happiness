@@ -418,8 +418,8 @@ void * client_thread(void * arg){
 	      stopVal = numRead-currRead;
 	    }
 	    
-	    printf("START VAL: %d\n",startVal);
-	    printf("STOP VAL: %d\n",stopVal);
+	    //printf("START VAL: %d\n",startVal);
+	    //printf("STOP VAL: %d\n",stopVal);
 
 	    tmpVec = paging->read_page(query->argv[1], startVal, stopVal, flag);
 	    
