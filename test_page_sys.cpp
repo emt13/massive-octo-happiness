@@ -525,7 +525,19 @@ void test_read(){
 	num = 256;
 	data = ps->read_page(file_name, off, num, flag);
 
+// --- binary reading in
+	off = 0;
+	num = 1024;
+	file_name = std::string("hw.out");
+	data = ps->read_page(file_name, off, num, flag);
 
+	print_data(data);
+
+	off = 1024;
+	num = 1024;
+	data = ps->read_page(file_name, off, num, flag);
+
+	print_data(data);
 
 	printf("--- finished testing read\n\n");
 
