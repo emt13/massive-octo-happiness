@@ -1,9 +1,11 @@
 import java.util.*;
 import java.io.*;
+import java.net.*;
 import java.util.ArrayList;
 
 public class client_java {
 	final static int PORT_NUM = 8765;
+	final static String HOST = "74.74.74.74";
 	static ArrayList<String> commands = new ArrayList<String>();
 
 	public static void main (String args[]) {
@@ -17,9 +19,16 @@ public class client_java {
 		 */
 		String file_name = getFileName();
 		ArrayList<String> commands = loadFile(file_name);
-		for (int i = 0; i < commands.size(); i++) {
+		/*for (int i = 0; i < commands.size(); i++) {
 			System.out.println(commands.get(i));
-		}
+		}*/
+		try {
+			Socket clientSocket = new Socket(HOST, PORT_NUM);
+			DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
+			for (int i = 0; i < commands.size(); ++i) {
+				outToServer.writeBytes(commands.get(i) + '\n');
+			}
+		} catch (Exception e) {}
 		
 	}
 
