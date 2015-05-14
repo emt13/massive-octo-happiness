@@ -358,6 +358,7 @@ void * client_thread(void * arg){
 	  //if file queued for deletion
 	  File * fileP;
 	  int fileIndex = filesys->findFile(query->argv[1]);
+	  printf("Done with find\n");
 	  if(fileIndex != -1){  //file exists
 	    
 	    fileP = filesys->files[fileIndex];
@@ -416,6 +417,8 @@ void * client_thread(void * arg){
 	    
 	    char * clientOut = (char * )calloc(tmpVec.size(), sizeof(char));
 	      
+
+
 	    for(unsigned int i = 0; i  < tmpVec.size(); i++){
 	      clientOut[i] = (char) tmpVec[i];
 	      //std::cout<<"output["<<i<<"] = "<<output[i]<<std::endl;
@@ -448,14 +451,16 @@ void * client_thread(void * arg){
 	    printf( "[thread %lu] Transferred %lu Bytes from offset %d\n", tid , tmpVec.size(), startVal);
 	      
 	    
-	    fileP->numReads--;
+	    
+	    
 	    
 	    free(clientOut);
 	    
 	  }
 	  
-	  
-	
+	  if(fileIndex!=-1){
+	    fileP->numReads--;
+	  }	    
 	  
 
 	  delete flag;

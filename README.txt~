@@ -9,5 +9,3 @@ We had issues linking commands with binary files. All commands seem to work when
 
 If you would like to run that, run make in the directory and then run ./test.out and it will display all of the test output which is 
 correct.  
-
-Please email us for test code if neccessary as we do not know how to put ./storage in our zip

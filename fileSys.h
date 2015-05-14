@@ -36,6 +36,7 @@ class FileSystem{
  public:
   //constructors
   FileSystem(){
+    num_files=0;
     setup();
   }
   
@@ -51,7 +52,10 @@ class FileSystem{
   //Functions
   //index or -1 if DNE
   int findFile(char * name){
+    printf("find name: %s\tnum_files: %d\n",name,num_files);
+    
     for(int i = 0; i < num_files;i++){
+      printf("files[%d]->file_name: %s\n",i,files[i]->file_name);
       if(strcmp(files[i]->file_name,name) == 0){
 	return i;
       }
@@ -112,9 +116,11 @@ class FileSystem{
       //wait for reads to finish
     }
 
+    std::cout<<"deleted"<<std::endl;
     delete files[index];
     files.erase(files.begin()+index);
-
+    std::cout<<"erased"<<std::endl;
+    num_files--;
     
     return 0;
   }
