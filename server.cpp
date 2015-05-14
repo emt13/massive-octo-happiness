@@ -35,7 +35,7 @@
 #include "pagingSys.h"
 #include "fileSys.h"
 
-
+//FIx: sempahor on reads
 //FIX: buffer is const size, any file-contents larger than 1024 will get cutoff
 #define BUFFER_SIZE 1025
 
@@ -206,8 +206,10 @@ void init_server(){
   //paging system init                                                                              
   paging = new PagingSystem(NUM_FRAMES, SIZE_FRAMES, FRAMES_PER_FILE);
 
+  /*
   paging->print_stats();
 
+  
   std::vector<BYTE> file_input;
   file_input.push_back((unsigned char) *("A"));
   file_input.push_back((unsigned char) *("B"));
@@ -229,7 +231,7 @@ void init_server(){
 
   printf("DONE WITH SERVER INIT\n");
 
-
+  */
   //server init                                                                                     
 
 
@@ -380,7 +382,7 @@ void * client_thread(void * arg){
 
 
 	else if(query->type == 2){  //read
-	  pthread_mutex_lock( &RDMutex );    /*   P(mutex)  */
+	  //pthread_mutex_lock( &RDMutex );    /*   P(mutex)  */
 	  //CRITICAL SECTION: read & delete
 	  
 	  int offset = atoi(query->argv[2]);
@@ -508,30 +510,35 @@ void * client_thread(void * arg){
 
 	  delete flag;
 	  //END CRITICAL SECTION                                                                          
-	  pthread_mutex_unlock( &RDMutex );  /*   V(mutex)  */
+	  //pthread_mutex_unlock( &RDMutex );  /*   V(mutex)  */
 
 	}
 
 
 	else if(query->type == 3){  //delete command, some synchronization required
-	  printf("start delete\n");
+	  //printf("start delete\n");
 	  
-	  filesys->print();
+	  //filesys->print();
 	  
-	  printf("end debug print\n");
+	  //printf("end debug print\n");
 	  query->argv[1][strlen(query->argv[1])-1] = '\0';  //get rid of \n
-	  printf("delete2\n");
-	  printf("argv[1]: %s\n",query->argv[1]);
+	  //printf("delete2\n");
+	  //printf("argv[1]: %s\n",query->argv[1]);
+	  printf( "[thread %lu] Rcvd: DELETE %s\n", tid , query->argv[1]);
 
 	  int rc = filesys->removeFile(query->argv[1]);
-	  printf("delete3\n");
+	  //printf("delete3\n");
 	  if(rc == 1){
-	    printf("FILE NOT FOUND: %s\n",query->argv[1]);
-	    
+	    //printf("FILE NOT FOUND: %s\n",query->argv[1]);
+	    sendClient( *(clientInfo->newsock), "ERROR: NO SUCH FILE\n",20);
 	  }
 	  else{
 	    //how well does it work with bum filename?
 	    paging->delete_file(std::string(query->argv[1]));
+	    printf( "[thread %lu] Deleted %s file\n", tid , query->argv[1]);
+	    sendClient( *(clientInfo->newsock), "ACK\n",4);
+	    printf( "[thread %lu] Sent: ACK\n", tid);
+	    
 	  }
 	}
 
@@ -660,7 +667,7 @@ void * exitThread(void *){
 
 int main()
 {
-  std::cout<<"Hello World!"<<std::endl;
+  //std::cout<<"Hello World!"<<std::endl;
   
   init_server();
 
@@ -669,11 +676,11 @@ int main()
   //thread ids and bools for if pthread_join has been called on them
   tids = new pthread_t[1000]; 
   
-  printf("crash is in FileSystem\n");
+  //  printf("crash is in FileSystem\n");
   
   filesys = new FileSystem;  //must be after init_server (init adds files to server)
 
-  printf("testa\n");
+  //printf("testa\n");
 
   /* Create the listener socket as TCP (SOCK_STREAM) socket */
   sock = socket( PF_INET, SOCK_STREAM, 0 );
@@ -711,7 +718,7 @@ int main()
 
 
 
-  printf("testb\n");
+  //printf("testb\n");
 
 
 
@@ -722,7 +729,7 @@ int main()
     
     
     
-    printf( "PARENT: Blocked on accept()\n" );
+    //    printf( "PARENT: Blocked on accept()\n" );
     int *newsock = new int; 
     *newsock = accept( sock, (struct sockaddr *)client,
 		       (socklen_t*)&fromlen );
