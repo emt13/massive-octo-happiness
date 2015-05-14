@@ -296,8 +296,9 @@ void * client_thread(void * arg){
 	    rc: -1 if it already exists
 	    total # written if it doesn't
 	  */
-	  filesys->addFile(fName);
 	  int rc = paging->store(fName, storeInput);       
+	  filesys->addFile(fName);
+
 	  //END CRITICAL SECTION                                                                          
 	  pthread_mutex_unlock( &storeMutex );  /*   V(mutex)  */
 	  

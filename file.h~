@@ -24,7 +24,7 @@ class File{
     file_name = (char *)calloc(strlen(fileName), sizeof(char));
     strcpy(file_name, fileName);
     //file_size = fileSize;
-    storing = 1;  //if you make a new file, should automatically be storing
+    storing = 0;  //if you make a new file, should automatically be storing
     numReads = 0; //just made file, no one reading
     readAble = 1;
   }
