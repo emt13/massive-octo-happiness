@@ -405,8 +405,6 @@ void * client_thread(void * arg){
 
 	  //if file queued for deletion, spew ERROR: FILE QUEUED FOR DELETION\n to client
 
-	  
-	  bool send = 1;
 
 	  //use a counter here if you need to do +1 or something (maybe no counter maybe just if(currRead==0) dont add 1, else +1 -------- for startVal
 	  while(currRead != numRead){
